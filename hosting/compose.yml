@@ -17,7 +17,8 @@ services:
         env_file:
             - ../api/.env
         depends_on:
-            - db
+            db:
+                condition: service_healthy
         command:
             [
                 "python",
@@ -46,7 +47,7 @@ services:
             start_period: 60s
 
     db:
-        image: postgres:15-alpine
+        image: postgres:16-alpine
         container_name: sentinel_dev
         ports:
             - "5433:5432"
@@ -57,16 +58,21 @@ services:
         env_file:
             - ../api/.env
         volumes:
-            - postgres_data:/var/lib/postgresql/data
+            - sentinel_db_data:/var/lib/postgresql/data
+            - ./scripts/initialize_db.sh:/docker-entrypoint-initdb.d/initialize_db.sh:ro
         healthcheck:
             test:
                 [
                     "CMD-SHELL",
-                    "pg_isready -U ${POSTGRES_USER:-abc} -d ${POSTGRES_DB:-qwerty}",
+                    "pg_isready -U ${POSTGRES_USER:-abc} -d ${POSTGRES_DB:-sentinel_db} -h localhost -p 5432",
                 ]
             interval: 10s
             timeout: 5s
             retries: 5
 
 volumes:
-    postgres_data:
+    sentinel_db_data:
+
+networks:
+    default:
+        name: sentinel_network
