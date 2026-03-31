@@ -1,15 +1,10 @@
-import logging
 from contextlib import asynccontextmanager
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from utils.env_utils import env
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+from utils.logger_utils import logger
 
 # Create SQLAlchemy engine with improved connection handling
 engine = create_async_engine(
