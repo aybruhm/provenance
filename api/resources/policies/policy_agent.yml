@@ -1,0 +1,48 @@
+name: payment_agent_policy
+version: "1.0"
+description: >
+    Sentinel policy for the Acme Corp payment processing agent.
+    Enforces currency allow-list, per-action amount thresholds,
+    and hard blocks on data-destructive operations.
+
+rules:
+    # ── Hard blocks ────────────────────────────────────────────────────────────
+    # Data deletion/bulk modification is never permitted via agent
+    - action: "data.*"
+      on_match: BLOCK
+      reason: "Data mutations require direct human action — agents are not authorized"
+
+    # ── Currency allow-list (checked before amount) ────────────────────────────
+    # Any currency outside the approved list triggers compliance escalation
+    - action: "payments.initiate"
+      conditions:
+          allowed_currencies: [GBP, USD, EUR]
+      on_violation: ESCALATE
+      violation_reason: >
+          Currency not on the approved list [GBP, USD, EUR].
+          Escalating to compliance team for manual review.
+
+    # ── Amount threshold ───────────────────────────────────────────────────────
+    # Payments above £500 require a named human approver
+    - action: "payments.initiate"
+      conditions:
+          max_amount: 500
+      on_violation: ESCALATE
+      violation_reason: >
+          Payment exceeds the £500 autonomous limit.
+          Human approval required before execution.
+
+    # ── Small payments in approved currencies: allow ───────────────────────────
+    - action: "payments.initiate"
+      on_match: ALLOW
+      reason: "Payment within approved parameters — amount ≤ £500, currency approved"
+
+    # ── Email send: always allowed ─────────────────────────────────────────────
+    - action: "email.send"
+      on_match: ALLOW
+      reason: "Email dispatch is unrestricted for this agent"
+
+    # ── Default passthrough ────────────────────────────────────────────────────
+    - action: "*"
+      on_match: ALLOW
+      reason: "No specific policy rule matched; default allow"
