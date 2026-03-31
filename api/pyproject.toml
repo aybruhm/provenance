@@ -1,0 +1,17 @@
+[project]
+name = "sentinel"
+version = "0.1.0"
+description = "Agentic Audit & Compliance Layer (SOC2 for AI agents)"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiohttp>=3.13.4",
+    "asyncpg>=0.31.0",
+    "fastapi>=0.135.2",
+    "passlib[bcrypt]>=1.7.4",
+    "pydantic>=2.12.5",
+    "pyjwt>=2.12.1",
+    "pyyaml>=6.0.3",
+    "sqlalchemy>=2.0.48",
+    "uvicorn>=0.42.0",
+]
