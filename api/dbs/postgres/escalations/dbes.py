@@ -1,17 +1,28 @@
 from sqlalchemy import Column, ForeignKey, String
+from sqlalchemy.dialects.postgresql import UUID
+from uuid_utils import uuid7
 
 from dbs.postgres.shared.dbas import IDMixin, TimestampMixin
 
 
 class EscalationDBE(IDMixin, TimestampMixin):
     event_id = Column(
-        String, ForeignKey("audit_events.id", ondelete="CASCADE"), nullable=True
+        UUID(as_uuid=True),
+        ForeignKey("audit_events.id", ondelete="CASCADE"),
+        nullable=True,
+        default=uuid7,
     )
     tenant_id = Column(
-        String, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        default=uuid7,
     )
     agent_id = Column(
-        String, ForeignKey("agents.id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=True),
+        ForeignKey("agents.id", ondelete="CASCADE"),
+        nullable=False,
+        default=uuid7,
     )
     action = Column(String, nullable=False)
     parameters_hash = Column(

@@ -1,6 +1,8 @@
 from enum import StrEnum
 
 from sqlalchemy import Column, Enum, ForeignKey, Index, String
+from sqlalchemy.dialects.postgresql import UUID
+from uuid_utils import uuid7
 
 from dbs.postgres.shared.dbas import IDMixin, TimestampMixin
 
@@ -31,8 +33,18 @@ class AuditEventDBE(IDMixin, TimestampMixin):
         ESCALATE = "ESCALATE"
 
     session_id = Column(String, nullable=False)
-    agent_id = Column(ForeignKey("agents.id", ondelete="CASCADE"), nullable=False)
-    tenant_id = Column(ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    agent_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("agents.id", ondelete="CASCADE"),
+        nullable=False,
+        default=uuid7,
+    )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        default=uuid7,
+    )
     action = Column(String, nullable=False)
     payload_hash = Column(String, nullable=False)  # SHA-256 of canonical JSON payload
     decision = Column(Enum(Decision, name="audit_event_decision"), nullable=False)
