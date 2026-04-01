@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from sqlalchemy.sql.elements import ColumnElement
+from sqlalchemy.sql.elements import ColumnElement, NamedColumn
 
 from dbs.postgres.audit_events.dbes import AuditEventDBE
 
@@ -16,8 +16,13 @@ class AuditEventDAOInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_prev_hash(self, tenant_id: UUID) -> AuditEventDBE | None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def query(
         self,
+        columns: list[NamedColumn],
         filters: list[ColumnElement],
         offset: int,
         limit: int,

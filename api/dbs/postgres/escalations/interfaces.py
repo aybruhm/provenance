@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict
 from uuid import UUID
 
-from sqlalchemy.sql.elements import ColumnElement
+from sqlalchemy.sql.elements import ColumnElement, NamedColumn
 
 from dbs.postgres.escalations.dbes import EscalationDBE
 
@@ -30,6 +30,7 @@ class EscalationDAOInterface(ABC):
     @abstractmethod
     async def query(
         self,
+        columns: list[NamedColumn],
         filters: list[ColumnElement],
         offset: int,
         limit: int,

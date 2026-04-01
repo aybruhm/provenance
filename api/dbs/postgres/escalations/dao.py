@@ -2,6 +2,7 @@ from typing import Any, Dict
 from uuid import UUID
 
 from sqlalchemy import select, update
+from sqlalchemy.sql.elements import ColumnElement, NamedColumn
 
 from dbs.postgres.engine import get_db_session
 from dbs.postgres.escalations.dbes import EscalationDBE
@@ -48,12 +49,19 @@ class EscalationDAO(EscalationDAOInterface):
 
     async def query(
         self,
-        filters: list,
+        columns: list[NamedColumn],
+        filters: list[ColumnElement],
         offset: int,
         limit: int,
     ) -> list[EscalationDBE]:
         async with get_db_session() as session:
-            stmt = select(EscalationDBE).where(*filters).offset(offset).limit(limit)
+            stmt = (
+                select(EscalationDBE)
+                .with_only_columns(*columns)
+                .where(*filters)
+                .offset(offset)
+                .limit(limit)
+            )
             result = await session.execute(stmt)
             escalations_dbes = result.scalars().all()
-            return list(escalations_dbes)    
+            return list(escalations_dbes)
