@@ -139,6 +139,19 @@ class AuditEventService:
             violations=violations,
         )
 
+    async def list_audit_events(
+        self,
+        tenant_id: UUID,
+        offset: int = 0,
+        limit: int = 100,
+    ) -> list[AuditEventDTO]:
+        return await self.query_audit_events(
+            columns=[AuditEventDBE],  # type: ignore
+            filters=[AuditEventDBE.tenant_id == tenant_id],
+            offset=offset,
+            limit=limit,
+        )
+
     async def query_audit_events(
         self,
         columns: list,
