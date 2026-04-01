@@ -1,13 +1,21 @@
 from uuid import UUID
 
+from core.audit_events import utils
 from core.audit_events.dtos import AuditEventDTO, CreateAuditEventDTO
+from core.audit_events.types import ChainValidationResult, ChainViolation
 from dbs.postgres.audit_events.dbes import AuditEventDBE
 from dbs.postgres.audit_events.interfaces import AuditEventDAOInterface
+from dbs.postgres.escalations.interfaces import EscalationDAOInterface
 
 
 class AuditEventService:
-    def __init__(self, audit_event_dao: AuditEventDAOInterface):
+    def __init__(
+        self,
+        audit_event_dao: AuditEventDAOInterface,
+        escalation_dao: EscalationDAOInterface,
+    ):
         self.audit_event_dao = audit_event_dao
+        self.escalation_dao = escalation_dao
 
     def _map_dbe_to_dto(self, dbe: AuditEventDBE) -> AuditEventDTO:
         return AuditEventDTO(
@@ -42,7 +50,23 @@ class AuditEventService:
         self, create_data: CreateAuditEventDTO
     ) -> AuditEventDTO:
         audit_event_dbe = self._map_dto_to_dbe(dto=create_data)
+        if create_data.parameters:
+            audit_event_dbe.payload_hash = utils.hash_payload(  # type: ignore
+                payload=create_data.parameters
+            )
+            audit_event_dbe.prev_hash = await self.get_prev_hash(  # type: ignore
+                tenant_id=UUID(create_data.tenant_id)
+            )
         audit_event_dbe = await self.audit_event_dao.create(dbe=audit_event_dbe)
+        if create_data.escalation_id:
+            # Backfill escalation → event link
+            await self.escalation_dao.update(
+                event_id=audit_event_dbe.id,  # type: ignore
+                values_to_update={
+                    "escalation_id": UUID(create_data.escalation_id),
+                },
+            )
+
         audit_event_dto = self._map_dbe_to_dto(dbe=audit_event_dbe)
         return audit_event_dto
 
@@ -53,13 +77,77 @@ class AuditEventService:
         audit_event_dto = self._map_dbe_to_dto(dbe=audit_event_dbe)
         return audit_event_dto
 
+    async def get_prev_hash(self, tenant_id: UUID) -> str:
+        last_event_dbe = await self.audit_event_dao.get_prev_hash(tenant_id=tenant_id)
+        if not last_event_dbe:
+            return utils.GENESIS_HASH
+        return utils.chain_hash(
+            event_id=str(last_event_dbe.id),  # type: ignore
+            timestamp=str(last_event_dbe.timestamp),  # type: ignore
+            payload_hash=last_event_dbe.payload_hash,  # type: ignore
+        )
+
+    async def verify_chain_integrity(
+        self,
+        tenant_id: UUID,
+        offset: int = 0,
+        limit: int = 50,
+    ) -> ChainValidationResult:
+        """
+        Walk the audit chain for a tenant and verify every prev_hash link.
+        Returns a report with any violations found.
+        """
+
+        events = await self.query_audit_events(
+            columns=[
+                AuditEventDBE.id,
+                AuditEventDBE.timestamp,
+                AuditEventDBE.payload_hash,
+                AuditEventDBE.prev_hash,
+            ],
+            filters=[AuditEventDBE.tenant_id == tenant_id],
+            offset=offset,
+            limit=limit,
+        )
+        violations: list[ChainViolation] = []
+
+        for i, event in enumerate(events):
+            if i == 0:
+                expected = utils.GENESIS_HASH
+            else:
+                prev_event = events[i - 1]
+                expected = utils.chain_hash(
+                    prev_event.id,
+                    prev_event.timestamp,
+                    prev_event.payload_hash,
+                )
+
+            if event.prev_hash != expected:
+                violations.append(
+                    ChainViolation(
+                        position=i,
+                        event_id=event.id,
+                        expected_prev_hash=expected,
+                        actual_prev_hash=event.prev_hash,
+                    )
+                )
+
+        return ChainValidationResult(
+            tenant_id=str(tenant_id),
+            valid=len(violations) == 0,
+            events_checked=len(events),
+            violations=violations,
+        )
+
     async def query_audit_events(
         self,
+        columns: list,
+        filters: list,
         offset: int,
         limit: int,
     ) -> list[AuditEventDTO]:
-        filters = []
         audit_events_dbes = await self.audit_event_dao.query(
+            columns=columns,
             filters=filters,
             offset=offset,
             limit=limit,

@@ -16,4 +16,6 @@ class CreateAuditEventDTO(BaseModel):
 
 class AuditEventDTO(CreateAuditEventDTO):
     id: str
+    payload_hash: str
+    prev_hash: str
     timestamp: str

@@ -1,6 +1,10 @@
 from uuid import UUID
 
-from core.escalations.dtos import CreateEscalationDTO, EscalationDTO
+from core.escalations.dtos import (
+    CreateEscalationDTO,
+    EscalationDTO,
+    UpdateEscalationDTO,
+)
 from dbs.postgres.escalations.dbes import EscalationDBE
 from dbs.postgres.escalations.interfaces import EscalationDAOInterface
 
@@ -48,13 +52,44 @@ class EscalationService:
         escalation_dto = self._map_dbe_to_dto(dbe=escalation_dbe)
         return escalation_dto
 
+    async def update_escalation(
+        self,
+        id: UUID,
+        update_data: UpdateEscalationDTO,
+    ) -> EscalationDTO | None:
+        escalation_dbe = await self.escalation_dao.update(
+            id=id,
+            values_to_update=update_data.model_dump(
+                exclude_none=True,
+            ),
+        )
+        if not escalation_dbe:
+            return None
+        escalation_dto = self._map_dbe_to_dto(dbe=escalation_dbe)
+        return escalation_dto
+
+    async def list_escalations(
+        self, tenant_id: UUID, offset: int, limit: int
+    ) -> list[EscalationDTO]:
+        filters = [EscalationDBE.tenant_id == tenant_id]
+        escalations = await self.query_escalations(
+            columns=[EscalationDBE],
+            filters=filters,
+            offset=offset,
+            limit=limit,
+        )
+        return escalations
+
     async def query_escalations(
         self,
+        columns: list,
+        filters: list,
         offset: int,
         limit: int,
     ) -> list[EscalationDTO]:
         filters = []
         escalations_dbes = await self.escalation_dao.query(
+            columns=columns,
             filters=filters,
             offset=offset,
             limit=limit,
