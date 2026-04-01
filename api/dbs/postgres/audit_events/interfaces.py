@@ -12,7 +12,7 @@ class AuditEventDAOInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get(self, id: UUID) -> AuditEventDBE:
+    async def get(self, id: UUID) -> AuditEventDBE | None:
         raise NotImplementedError
 
     @abstractmethod

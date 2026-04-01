@@ -24,7 +24,7 @@ class EscalationDAOInterface(ABC):
         self,
         id: UUID,
         values_to_update: Dict[str, Any],
-    ) -> EscalationDBE:
+    ) -> EscalationDBE | None:
         raise NotImplementedError
 
     @abstractmethod

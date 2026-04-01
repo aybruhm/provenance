@@ -13,7 +13,7 @@ class TenantDAOInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get(self, id: UUID) -> TenantDBE:
+    async def get(self, id: UUID) -> TenantDBE | None:
         raise NotImplementedError
 
     @abstractmethod
@@ -21,7 +21,7 @@ class TenantDAOInterface(ABC):
         self,
         id: UUID,
         values_to_update: Dict[str, Any],
-    ) -> TenantDBE:
+    ) -> TenantDBE | None:
         raise NotImplementedError
 
     @abstractmethod

@@ -17,7 +17,7 @@ class AgentDAOInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get(self, id: UUID) -> AgentDBE:
+    async def get(self, id: UUID) -> AgentDBE | None:
         raise NotImplementedError
 
     @abstractmethod
@@ -25,7 +25,7 @@ class AgentDAOInterface(ABC):
         self,
         id: UUID,
         values_to_update: Dict[str, Any],
-    ) -> AgentDBE:
+    ) -> AgentDBE | None:
         raise NotImplementedError
 
     @abstractmethod
