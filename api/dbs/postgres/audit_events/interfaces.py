@@ -8,7 +8,7 @@ from dbs.postgres.audit_events.dbes import AuditEventDBE
 
 class AuditEventDAOInterface(ABC):
     @abstractmethod
-    async def create(self, dbe: AuditEventDBE):
+    async def create(self, dbe: AuditEventDBE) -> AuditEventDBE:
         raise NotImplementedError
 
     @abstractmethod
