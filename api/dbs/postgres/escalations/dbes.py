@@ -10,7 +10,6 @@ class EscalationDBE(IDMixin, TimestampMixin):
         UUID(as_uuid=True),
         ForeignKey("audit_events.id", ondelete="CASCADE"),
         nullable=True,
-        default=uuid7,
     )
     tenant_id = Column(
         UUID(as_uuid=True),
