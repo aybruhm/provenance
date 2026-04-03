@@ -4,6 +4,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from apis.fastapi.audit import AuditAPIRouter
+from apis.fastapi.auth import UsersAuthAPIRouter
 from apis.fastapi.escalations import EscalationAPIRouter
 from apis.fastapi.gateway import ExecutionGatewayAPIRouter
 from apis.fastapi.policy import PolicyAPIRouter
@@ -13,9 +14,13 @@ from core.escalations.manager import EscalationManager
 from core.escalations.service import EscalationService
 from core.policy.service import PolicyEngine
 from core.reports.service import ComplianceReportService
+from core.users.auth import AuthService
+from core.users.service import UserService
 from dbs.postgres.audit_events.dao import AuditEventDAO
 from dbs.postgres.engine import cleanup_connections, test_connection
 from dbs.postgres.escalations.dao import EscalationDAO
+from dbs.postgres.users.dao import UserDAO
+from middlewares.jwt_bearer import JWTCookie
 
 
 @asynccontextmanager
@@ -44,11 +49,17 @@ app.add_middleware(
 api_v1_router = APIRouter(prefix="/v1")
 app.include_router(api_v1_router)
 
+# Initialize custom middlewares
+jwt_cookie = JWTCookie()
+
 # Initialize DAOs
 audit_event_dao = AuditEventDAO()
 escalation_dao = EscalationDAO()
+user_dao = UserDAO()
 
 # Initialize services
+user_service = UserService(dao=user_dao)
+auth_service = AuthService(user_service=user_service)
 policy_engine = PolicyEngine()
 audit_service = AuditEventService(
     audit_event_dao=audit_event_dao,
@@ -82,6 +93,10 @@ escalation_router = EscalationAPIRouter(
 policy_router = PolicyAPIRouter()
 reports_router = ReportsAPIRouter(
     report_service=report_service,
+)
+users_auth_router = UsersAuthAPIRouter(
+    jwt_cookie=jwt_cookie,
+    auth_service=auth_service,
 )
 
 # Register routers
