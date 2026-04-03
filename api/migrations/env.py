@@ -10,6 +10,7 @@ import dbs.postgres.agents.dbes  # noqa: F401
 import dbs.postgres.audit_events.dbes  # noqa: F401
 import dbs.postgres.escalations.dbes  # noqa: F401
 import dbs.postgres.tenants.dbes  # noqa: F401
+import dbs.postgres.users.dbes  # noqa: F401
 from dbs.postgres.shared.dbas import Base
 from utils.env_utils import env
 
