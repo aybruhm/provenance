@@ -1,4 +1,6 @@
+from datetime import datetime
 from enum import Enum
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -43,3 +45,27 @@ class ExecuteResponseDTO(BaseModel):
     reason: str
     escalation_id: str | None = None
     actor_human_id: str | None = None
+
+
+# -------- Auth ------------------
+
+
+class UserResponse(BaseModel):
+    id: UUID
+    username: str
+    token_balance: int
+    created_at: datetime
+
+
+class JWTTokensDTO(BaseModel):
+    access_token: str
+    refresh_token: str
+
+
+class CredentialsDTO(JWTTokensDTO):
+    pass
+
+
+class UserWithCredentialsResponse(BaseModel):
+    user: UserResponse
+    credentials: CredentialsDTO
