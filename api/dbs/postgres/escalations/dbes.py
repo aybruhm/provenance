@@ -6,6 +6,8 @@ from dbs.postgres.shared.dbas import IDMixin, TimestampMixin
 
 
 class EscalationDBE(IDMixin, TimestampMixin):
+    __tablename__ = "escalations"
+
     event_id = Column(
         UUID(as_uuid=True),
         ForeignKey("audit_events.id", ondelete="CASCADE"),
