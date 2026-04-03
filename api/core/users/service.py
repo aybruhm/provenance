@@ -24,14 +24,14 @@ class UserService:
         user_dbe = await self.user_dao.get_by_id(user_id)
         if user_dbe is None:
             return None
-        user_dto = self._map_dbe_to_dto(user_dbe)
+        user_dto = self._map_dbe_to_dto(dbe=user_dbe)
         return user_dto
 
     async def get_user_by_username(self, username: str) -> UserDTO | None:
         user_dbe = await self.user_dao.get_by_username(username=username)
         if user_dbe is None:
             return None
-        user_dto = self._map_dbe_to_dto(user_dbe)
+        user_dto = self._map_dbe_to_dto(dbe=user_dbe)
         return user_dto
 
     async def update_user(
@@ -46,5 +46,5 @@ class UserService:
         if user_dbe is None:
             return None
 
-        user_dto = self._map_dbe_to_dto(user_dbe)
+        user_dto = self._map_dbe_to_dto(dbe=user_dbe)
         return user_dto
