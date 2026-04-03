@@ -24,7 +24,6 @@ class EscalationService:
 
     def _map_dto_to_dbe(self, dto: CreateEscalationDTO) -> EscalationDBE:
         return EscalationDBE(
-            event_id=dto.event_id,
             tenant_id=dto.tenant_id,
             agent_id=dto.agent_id,
             action=dto.action,
@@ -69,9 +68,16 @@ class EscalationService:
         return escalation_dto
 
     async def list_escalations(
-        self, tenant_id: UUID, offset: int, limit: int
+        self,
+        tenant_id: UUID,
+        offset: int,
+        limit: int,
+        status: str | None = None,
     ) -> list[EscalationDTO]:
         filters = [EscalationDBE.tenant_id == tenant_id]
+        if status:
+            filters.append(EscalationDBE.status == status)
+
         escalations = await self.query_escalations(
             columns=[EscalationDBE],
             filters=filters,
