@@ -88,6 +88,7 @@ agent_service = AgentService(agent_dao=agent_dao)
 # Initialize routers
 execution_gateway_router = ExecutionGatewayAPIRouter(
     policy_engine=policy_engine,
+    tenant_service=tenant_service,
     audit_service=audit_service,
     escalation_manager=escalation_manager,
     escalation_service=escalation_service,

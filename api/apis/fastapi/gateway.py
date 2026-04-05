@@ -12,6 +12,7 @@ from core.audit_events.service import utils as audit_utils
 from core.escalations.manager import EscalationManager
 from core.escalations.service import EscalationService
 from core.policy.service import PolicyEngine
+from core.tenants.service import TenantService
 from services.dependencies import get_current_user
 
 
@@ -19,11 +20,13 @@ class ExecutionGatewayAPIRouter:
     def __init__(
         self,
         policy_engine: PolicyEngine,
+        tenant_service: TenantService,
         audit_service: AuditEventService,
         escalation_manager: EscalationManager,
         escalation_service: EscalationService,
     ):
         self.policy_engine = policy_engine
+        self.tenant_service = tenant_service
         self.audit_service = audit_service
         self.escalation_manager = escalation_manager
         self.escalation_service = escalation_service
@@ -53,8 +56,17 @@ class ExecutionGatewayAPIRouter:
             5. Return decision to caller
         """
 
-        # In production: look up tenant → policy_id from DB
-        policy = await self.policy_engine.load_policy(policy_id="payment_agent")
+        tenant = await self.tenant_service.get_tenant(
+            id=UUID(execute_request.tenant_id),
+            user_id=request.state.user_id,
+        )
+        if not tenant:
+            return ExecuteResponseDTO(
+                decision="BLOCK",  # type: ignore
+                reason="Tenant not found",
+            )
+
+        policy = await self.policy_engine.load_policy(policy_id=tenant.policy_id)
         parameters = execute_request.parameters or dict()
         decision, reason = self.policy_engine.evaluate_policy(
             policy=policy,
