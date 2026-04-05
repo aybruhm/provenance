@@ -44,5 +44,5 @@ rules:
 
     # ── Default passthrough ────────────────────────────────────────────────────
     - action: "*"
-      on_match: ALLOW
-      reason: "No specific policy rule matched; default allow"
+      on_match: BLOCK
+      reason: "No specific policy rule matched; default block"
