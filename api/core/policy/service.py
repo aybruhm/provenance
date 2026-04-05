@@ -35,7 +35,12 @@ class PolicyEngine:
 
     def __init__(self):
         try:
-            self.POLICIES_DIR = Path("policies")
+            self.POLICIES_DIR = (
+                Path(__file__).parent.parent.parent / "resources" / "policies"
+            )
+            logger.info(
+                f"PolicyEngine initialized with policies directory: {self.POLICIES_DIR}"
+            )
         except FileNotFoundError as e:
             logger.error(
                 f"Error initializing PolicyEngine due to missing directory: {e}"
@@ -97,6 +102,8 @@ class PolicyEngine:
     async def load_policy(self, policy_id: str) -> dict[str, Any]:
         path = self.POLICIES_DIR / f"{policy_id}.yaml"
         if not path.exists():
+            path = self.POLICIES_DIR / f"{policy_id}.yml"
+        if not path.exists():
             return {
                 "name": "default-passthrough",
                 "rules": [
@@ -108,6 +115,7 @@ class PolicyEngine:
                 ],
             }
 
+        logger.info(f"Loading policy: {path}...")
         async with aiofiles.open(path, "r") as f:
             content = await f.read()
             return yaml.safe_load(content)
