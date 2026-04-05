@@ -22,6 +22,10 @@ class TenantDAOInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_by_name(self, name: str, user_id: UUID) -> TenantDBE | None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def update(
         self,
         id: UUID,
