@@ -13,6 +13,6 @@ class UpdateAgentDTO(BaseModel):
 
 
 class AgentDTO(CreateAgentDTO):
-    id: UUID
+    id: str
     created_at: str
     updated_at: str

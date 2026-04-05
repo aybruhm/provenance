@@ -11,14 +11,18 @@ class AgentService:
 
     def _map_dbe_to_dto(self, dbe: AgentDBE) -> AgentDTO:
         return AgentDTO(
-            id=dbe.id,  # type: ignore
+            id=str(dbe.id),
             name=dbe.name,  # type: ignore
             tenant_id=dbe.tenant_id,  # type: ignore
-            created_at=dbe.created_at,  # type: ignore
-            updated_at=dbe.updated_at,  # type: ignore
+            created_at=dbe.created_at.isoformat(),  # type: ignore
+            updated_at=dbe.updated_at.isoformat(),  # type: ignore
         )
 
     async def create_agent(self, create_data: CreateAgentDTO) -> AgentDTO:
+        agent_dbe = await self.agent_dao.get_by_name(name=create_data.name)
+        if agent_dbe:
+            raise ValueError("Agent with this name already exists")
+        
         agent_dbe = await self.agent_dao.create(
             name=create_data.name,
             tenant_id=create_data.tenant_id,
