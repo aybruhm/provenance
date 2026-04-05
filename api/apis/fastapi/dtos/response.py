@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from core.agents.dtos import AgentDTO
 from core.audit_events.dtos import AuditEventDTO
 from core.audit_events.types import ChainValidationResult
 from core.escalations.dtos import EscalationDecisionDTO, EscalationDTO
@@ -18,6 +19,17 @@ class TenantResponseDTO(BaseModel):
 
 class TenantListResponseDTO(BaseModel):
     tenants: list[TenantDTO]
+
+
+# ------- Agents -------
+
+
+class AgentResponseDTO(BaseModel):
+    agent: AgentDTO
+
+
+class AgentListResponseDTO(BaseModel):
+    agents: list[AgentDTO]
 
 
 # ------- Audits -------

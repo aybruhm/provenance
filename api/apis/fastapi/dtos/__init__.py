@@ -1,4 +1,6 @@
 from .request import (
+    AgentCreateRequestDTO,
+    AgentUpdateRequestDTO,
     EscalationCreateRequestDTO,
     EscalationDecisionRequestDTO,
     ExecuteRequestDTO,
@@ -8,6 +10,8 @@ from .request import (
     TenantUpdateRequestDTO,
 )
 from .response import (
+    AgentListResponseDTO,
+    AgentResponseDTO,
     AuditEventIntegrityResponseDTO,
     AuditEventResponseDTO,
     CredentialsDTO,
@@ -31,6 +35,11 @@ __all__ = [
     "TenantUpdateRequestDTO",
     "TenantResponseDTO",
     "TenantListResponseDTO",
+    # Agents
+    "AgentCreateRequestDTO",
+    "AgentUpdateRequestDTO",
+    "AgentResponseDTO",
+    "AgentListResponseDTO",
     # Responses
     "AuditEventResponseDTO",
     "AuditEventIntegrityResponseDTO",

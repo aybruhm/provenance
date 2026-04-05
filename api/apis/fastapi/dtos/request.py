@@ -2,6 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from core.agents.dtos import CreateAgentDTO, UpdateAgentDTO
 from core.audit_events.dtos import CreateAuditEventDTO
 from core.escalations.dtos import CreateEscalationDTO
 from core.tenants.dtos import CreateTenantDTO, UpdateTenantDTO
@@ -15,6 +16,17 @@ class TenantCreateRequestDTO(CreateTenantDTO):
 
 
 class TenantUpdateRequestDTO(UpdateTenantDTO):
+    pass
+
+
+# ------ Agents ----------
+
+
+class AgentCreateRequestDTO(CreateAgentDTO):
+    pass
+
+
+class AgentUpdateRequestDTO(UpdateAgentDTO):
     pass
 
 
