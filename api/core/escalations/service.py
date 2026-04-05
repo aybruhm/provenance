@@ -15,11 +15,17 @@ class EscalationService:
 
     def _map_dbe_to_dto(self, dbe: EscalationDBE) -> EscalationDTO:
         return EscalationDTO(
-            id=dbe.id,  # type: ignore
-            name=dbe.name,  # type: ignore
+            id=str(dbe.id),  # type: ignore
             tenant_id=dbe.tenant_id,  # type: ignore
-            created_at=dbe.created_at,  # type: ignore
-            updated_at=dbe.updated_at,  # type: ignore
+            agent_id=dbe.agent_id,  # type: ignore
+            action=dbe.action,  # type: ignore
+            parameters_hash=dbe.parameters_hash,  # type: ignore
+            status=dbe.status,  # type: ignore
+            approver_id=dbe.approver_id,  # type: ignore
+            decided_at=dbe.decided_at,  # type: ignore
+            reason=dbe.reason,  # type: ignore
+            created_at=dbe.created_at.isoformat(),  # type: ignore
+            updated_at=dbe.updated_at.isoformat(),  # type: ignore
         )
 
     def _map_dto_to_dbe(self, dto: CreateEscalationDTO) -> EscalationDBE:
