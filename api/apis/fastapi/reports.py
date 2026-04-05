@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
+from apis.fastapi.dtos import ReportResponseDTO
 from core.reports.service import ComplianceReportService
 from services.dependencies import get_current_user
 
@@ -18,6 +19,7 @@ class ReportsAPIRouter:
             "/{tenant_id}/{framework}",
             self.get_report,
             methods=["GET"],
+            response_model=ReportResponseDTO,
         )
 
     async def get_report(
@@ -39,17 +41,17 @@ class ReportsAPIRouter:
                     start_date=start_date,
                     end_date=end_date,
                 )
-                return soc2_report
+                return ReportResponseDTO(report=soc2_report)
             case "gdpr":
                 gdpr_report = await self.report_service.generate_gdpr_report(
                     tenant_id=tenant_id
                 )
-                return gdpr_report
+                return ReportResponseDTO(report=gdpr_report)
             case "pci":
                 pci_report = await self.report_service.generate_pci_report(
                     tenant_id=tenant_id
                 )
-                return pci_report
+                return ReportResponseDTO(report=pci_report)
             case _:
                 raise HTTPException(
                     status_code=400,

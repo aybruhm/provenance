@@ -18,6 +18,7 @@ from .response import (
     EscalationDecisionResponseDTO,
     EscalationResponseDTO,
     ExecuteResponseDTO,
+    ReportResponseDTO,
     TenantListResponseDTO,
     TenantResponseDTO,
     UserResponse,
@@ -40,6 +41,8 @@ __all__ = [
     "AgentUpdateRequestDTO",
     "AgentResponseDTO",
     "AgentListResponseDTO",
+    # Reports
+    "ReportResponseDTO",
     # Responses
     "AuditEventResponseDTO",
     "AuditEventIntegrityResponseDTO",

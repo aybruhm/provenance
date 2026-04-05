@@ -8,6 +8,7 @@ from core.agents.dtos import AgentDTO
 from core.audit_events.dtos import AuditEventDTO
 from core.audit_events.types import ChainValidationResult
 from core.escalations.dtos import EscalationDecisionDTO, EscalationDTO
+from core.reports.types import GDPRReport, PCIDSSReport, SOC2Report
 from core.tenants.dtos import TenantDTO
 
 # ------- Tenants -------
@@ -43,6 +44,13 @@ class AuditEventIntegrityResponseDTO(BaseModel):
     integrity: ChainValidationResult
 
 
+# ------- Reports --------
+
+
+class ReportResponseDTO(BaseModel):
+    report: SOC2Report | GDPRReport | PCIDSSReport
+
+
 # ------- Escalations -------
 
 
@@ -64,7 +72,7 @@ class Decision(str, Enum):
 
 
 class ExecuteResponseDTO(BaseModel):
-    event_id: str
+    event_id: str | None = None
     decision: Decision
     reason: str
     escalation_id: str | None = None
