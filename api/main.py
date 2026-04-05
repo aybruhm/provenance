@@ -45,9 +45,8 @@ app.add_middleware(
 )
 
 
-# Set and register v1 router
+# Initialize v1 router
 api_v1_router = APIRouter(prefix="/v1")
-app.include_router(api_v1_router)
 
 # Initialize custom middlewares
 jwt_cookie = JWTCookie()
@@ -125,6 +124,14 @@ api_v1_router.include_router(
     tags=["Reports"],
     prefix="/reports",
 )
+api_v1_router.include_router(
+    users_auth_router.router,
+    tags=["Auth"],
+    prefix="/auth",
+)
+
+# Mount api_v1_router
+app.include_router(api_v1_router)
 
 
 @app.get("/health")
