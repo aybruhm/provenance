@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from apis.fastapi.agents import AgentAPIRouter
 from apis.fastapi.audit import AuditAPIRouter
 from apis.fastapi.auth import UsersAuthAPIRouter
 from apis.fastapi.escalations import EscalationAPIRouter
@@ -10,6 +11,7 @@ from apis.fastapi.gateway import ExecutionGatewayAPIRouter
 from apis.fastapi.policy import PolicyAPIRouter
 from apis.fastapi.reports import ReportsAPIRouter
 from apis.fastapi.tenants import TenantAPIRouter
+from core.agents.service import AgentService
 from core.audit_events.service import AuditEventService
 from core.escalations.manager import EscalationManager
 from core.escalations.service import EscalationService
@@ -18,6 +20,7 @@ from core.reports.service import ComplianceReportService
 from core.tenants.service import TenantService
 from core.users.auth import AuthService
 from core.users.service import UserService
+from dbs.postgres.agents.dao import AgentDAO
 from dbs.postgres.audit_events.dao import AuditEventDAO
 from dbs.postgres.engine import cleanup_connections, test_connection
 from dbs.postgres.escalations.dao import EscalationDAO
@@ -59,6 +62,7 @@ audit_event_dao = AuditEventDAO()
 escalation_dao = EscalationDAO()
 user_dao = UserDAO()
 tenant_dao = TenantDAO()
+agent_dao = AgentDAO()
 
 # Initialize services
 user_service = UserService(dao=user_dao)
@@ -79,6 +83,7 @@ report_service = ComplianceReportService(
     audit_event_service=audit_service,
 )
 tenant_service = TenantService(tenant_dao=tenant_dao)
+agent_service = AgentService(agent_dao=agent_dao)
 
 # Initialize routers
 execution_gateway_router = ExecutionGatewayAPIRouter(
@@ -104,6 +109,9 @@ users_auth_router = UsersAuthAPIRouter(
 )
 tenant_router = TenantAPIRouter(
     tenant_service=tenant_service,
+)
+agent_router = AgentAPIRouter(
+    agent_service=agent_service,
 )
 
 
@@ -137,6 +145,11 @@ api_v1_router.include_router(
     tenant_router.router,
     tags=["Tenants"],
     prefix="/tenants",
+)
+api_v1_router.include_router(
+    agent_router.router,
+    tags=["Agents"],
+    prefix="/agents",
 )
 api_v1_router.include_router(
     users_auth_router.router,
