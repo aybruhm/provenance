@@ -1,4 +1,5 @@
 from uuid import UUID
+from datetime import datetime
 
 from core.audit_events import utils
 from core.audit_events.dtos import AuditEventDTO, CreateAuditEventDTO
@@ -19,10 +20,10 @@ class AuditEventService:
 
     def _map_dbe_to_dto(self, dbe: AuditEventDBE) -> AuditEventDTO:
         return AuditEventDTO(
-            id=dbe.id,  # type: ignore
+            id=str(dbe.id),  # type: ignore
             session_id=dbe.session_id,  # type: ignore
-            agent_id=dbe.agent_id,  # type: ignore
-            tenant_id=dbe.tenant_id,  # type: ignore
+            agent_id=str(dbe.agent_id),  # type: ignore
+            tenant_id=str(dbe.tenant_id),  # type: ignore
             action=dbe.action,  # type: ignore
             payload_hash=dbe.payload_hash,  # type: ignore
             decision=dbe.decision,  # type: ignore
@@ -30,8 +31,6 @@ class AuditEventService:
             actor_human_id=dbe.actor_human_id,  # type: ignore
             prev_hash=dbe.prev_hash,  # type: ignore
             timestamp=dbe.timestamp,  # type: ignore
-            event_data=dbe.event_data,  # type: ignore
-            created_at=dbe.created_at,  # type: ignore
         )
 
     def _map_dto_to_dbe(self, dto: CreateAuditEventDTO) -> AuditEventDBE:
@@ -40,11 +39,13 @@ class AuditEventService:
             agent_id=dto.agent_id,
             tenant_id=dto.tenant_id,
             action=dto.action,
-            parameters=dto.parameters,
             decision=dto.decision,
             escalation_id=dto.escalation_id,
             actor_human_id=dto.actor_human_id,
         )
+
+    def _get_utc_timestamp(self) -> str:
+        return datetime.utcnow().isoformat()
 
     async def create_audit_event(
         self, create_data: CreateAuditEventDTO
@@ -57,13 +58,15 @@ class AuditEventService:
             audit_event_dbe.prev_hash = await self.get_prev_hash(  # type: ignore
                 tenant_id=UUID(create_data.tenant_id)
             )
+            audit_event_dbe.timestamp = self._get_utc_timestamp()  # type: ignore
+
         audit_event_dbe = await self.audit_event_dao.create(dbe=audit_event_dbe)
         if create_data.escalation_id:
             # Backfill escalation → event link
             await self.escalation_dao.update(
-                event_id=audit_event_dbe.id,  # type: ignore
+                id=UUID(audit_event_dbe.escalation_id),  # type: ignore
                 values_to_update={
-                    "escalation_id": UUID(create_data.escalation_id),
+                    "event_id": audit_event_dbe.id,
                 },
             )
 
@@ -98,14 +101,8 @@ class AuditEventService:
         Returns a report with any violations found.
         """
 
-        events = await self.query_audit_events(
-            columns=[
-                AuditEventDBE.id,
-                AuditEventDBE.timestamp,
-                AuditEventDBE.payload_hash,
-                AuditEventDBE.prev_hash,
-            ],
-            filters=[AuditEventDBE.tenant_id == tenant_id],
+        events = await self.list_audit_events(
+            tenant_id=tenant_id,
             offset=offset,
             limit=limit,
         )
