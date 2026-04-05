@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Index, String
+from sqlalchemy import Column, ForeignKey, Index, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 
 from dbs.postgres.shared.dbas import IDMixin, TimestampMixin
@@ -10,6 +10,11 @@ class TenantDBE(IDMixin, TimestampMixin):
         Index(
             "ix_tenants_user_id",
             "user_id",
+        ),
+        UniqueConstraint(
+            "name",
+            "user_id",
+            name="uq_tenants_name_user_id",
         ),
     )
 
