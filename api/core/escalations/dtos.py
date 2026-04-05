@@ -1,7 +1,7 @@
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 
 class CreateEscalationDTO(BaseModel):
@@ -16,9 +16,17 @@ class CreateEscalationDTO(BaseModel):
 
 
 class EscalationDTO(CreateEscalationDTO):
-    id: UUID
+    id: str
     created_at: str
     updated_at: str
+
+    @field_serializer(
+        "tenant_id",
+        "agent_id",
+        when_used="always",
+    )
+    def serialize_uuid(self, v: UUID) -> str:
+        return str(v)
 
 
 class UpdateEscalationDTO(BaseModel):
