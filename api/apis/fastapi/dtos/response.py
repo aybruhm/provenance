@@ -53,7 +53,6 @@ class ExecuteResponseDTO(BaseModel):
 class UserResponse(BaseModel):
     id: UUID
     username: str
-    token_balance: int
     created_at: datetime
 
 
