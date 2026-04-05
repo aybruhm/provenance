@@ -43,7 +43,6 @@ class EscalationManager:
     async def create_escalation(
         self,
         *,
-        event_id: str,
         tenant_id: str,
         agent_id: str,
         action: str,
@@ -51,7 +50,6 @@ class EscalationManager:
     ) -> str:
         escalation = await self.service.create_escalation(
             create_data=CreateEscalationDTO(
-                event_id=UUID(event_id),
                 tenant_id=UUID(tenant_id),
                 agent_id=UUID(agent_id),
                 action=action,
