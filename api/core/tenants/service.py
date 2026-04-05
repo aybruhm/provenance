@@ -11,16 +11,22 @@ class TenantService:
 
     def _map_dbe_to_dto(self, dbe: TenantDBE) -> TenantDTO:
         return TenantDTO(
-            id=dbe.id,  # type: ignore
+            id=str(dbe.id),
             name=dbe.name,  # type: ignore
             policy_id=dbe.policy_id,  # type: ignore
-            created_at=dbe.created_at,  # type: ignore
-            updated_at=dbe.updated_at,  # type: ignore
+            created_at=dbe.created_at.isoformat(),  # type: ignore
+            updated_at=dbe.updated_at.isoformat(),  # type: ignore
         )
 
     async def create_tenant(
         self, user_id: UUID, create_data: CreateTenantDTO
     ) -> TenantDTO:
+        tenant_dbe = await self.tenant_dao.get_by_name(
+            name=create_data.name, user_id=user_id
+        )
+        if tenant_dbe:
+            raise ValueError("Tenant with this name already exists")
+
         tenant_dbe = await self.tenant_dao.create(
             name=create_data.name,
             policy_id=create_data.policy_id,

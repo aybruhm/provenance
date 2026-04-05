@@ -13,6 +13,6 @@ class UpdateTenantDTO(BaseModel):
 
 
 class TenantDTO(CreateTenantDTO):
-    id: UUID
+    id: str
     created_at: str
     updated_at: str
