@@ -4,7 +4,19 @@ from pydantic import BaseModel
 
 from core.audit_events.dtos import CreateAuditEventDTO
 from core.escalations.dtos import CreateEscalationDTO
+from core.tenants.dtos import CreateTenantDTO, UpdateTenantDTO
 from core.users.dtos import LoginUserDTO, RegisterUserDTO
+
+# ----- Tenants -----
+
+
+class TenantCreateRequestDTO(CreateTenantDTO):
+    pass
+
+
+class TenantUpdateRequestDTO(UpdateTenantDTO):
+    pass
+
 
 # ----- Execution Gateway -----
 

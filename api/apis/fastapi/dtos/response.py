@@ -7,6 +7,18 @@ from pydantic import BaseModel
 from core.audit_events.dtos import AuditEventDTO
 from core.audit_events.types import ChainValidationResult
 from core.escalations.dtos import EscalationDecisionDTO, EscalationDTO
+from core.tenants.dtos import TenantDTO
+
+# ------- Tenants -------
+
+
+class TenantResponseDTO(BaseModel):
+    tenant: TenantDTO
+
+
+class TenantListResponseDTO(BaseModel):
+    tenants: list[TenantDTO]
+
 
 # ------- Audits -------
 
