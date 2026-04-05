@@ -44,13 +44,13 @@ class UsersAuthAPIRouter:
             "/register",
             self.register_user,
             methods=["POST"],
-            response_model=UserResponse,
+            response_model=UserWithCredentialsResponse,
         )
         self.router.add_api_route(
             "/login",
             self.login_user,
             methods=["POST"],
-            response_model=UserResponse,
+            response_model=UserWithCredentialsResponse,
         )
         self.router.add_api_route(
             "/me",
@@ -100,7 +100,36 @@ class UsersAuthAPIRouter:
             )
 
         user = await self.auth_service.register(register_dto=register_dto)
-        return user
+        access_token = await sign_access_token(
+            user_data={
+                "id": user.id,
+                "username": user.username,
+            }
+        )
+        refresh_token = await sign_refresh_token(
+            user_data={
+                "id": user.id,
+                "username": user.username,
+            }
+        )
+
+        user_response = UserResponse(**user.model_dump())
+        credentials_response = CredentialsDTO(
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
+        uwc_response = UserWithCredentialsResponse(
+            user=user_response,
+            credentials=credentials_response,
+        )
+
+        response = JSONResponse(content=uwc_response.model_dump(mode="json"))
+        self._set_http_only_cookies(
+            response=response,
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
+        return response
 
     async def login_user(self, request: Request, login_dto: LoginUserRequestDTO):
         user = await self.auth_service.login(login_dto=login_dto)
