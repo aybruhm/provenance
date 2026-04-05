@@ -2,6 +2,7 @@ from typing import Any, Dict
 from uuid import UUID
 
 from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 
 from dbs.postgres.agents.dbes import AgentDBE
 from dbs.postgres.agents.interfaces import AgentDAOInterface
@@ -29,24 +30,36 @@ class AgentDAO(AgentDAOInterface):
                 return None
             return agent_dbe
 
+    async def get_by_name(self, name: str) -> AgentDBE | None:
+        async with get_db_session() as session:
+            stmt = select(AgentDBE).where(AgentDBE.name == name)
+            result = await session.execute(stmt)
+            agent_dbe = result.scalar_one_or_none()
+            if not agent_dbe:
+                return None
+            return agent_dbe
+
     async def update(
         self,
         id: UUID,
         values_to_update: Dict[str, Any],
     ) -> AgentDBE | None:
-        async with get_db_session() as session:
-            stmt = (
-                update(AgentDBE)
-                .where(AgentDBE.id == id)
-                .values(**values_to_update)
-                .returning(AgentDBE)
-            )
-            result = await session.execute(stmt)
-            await session.commit()
-            agent_dbe = result.scalar_one_or_none()
-            if not agent_dbe:
-                return None
-            return agent_dbe
+        try:
+            async with get_db_session() as session:
+                stmt = (
+                    update(AgentDBE)
+                    .where(AgentDBE.id == id)
+                    .values(**values_to_update)
+                    .returning(AgentDBE)
+                )
+                result = await session.execute(stmt)
+                await session.commit()
+                agent_dbe = result.scalar_one_or_none()
+                if not agent_dbe:
+                    return None
+                return agent_dbe
+        except IntegrityError:
+            raise ValueError("Agent with this name already exists")
 
     async def query(
         self,

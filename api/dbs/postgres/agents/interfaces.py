@@ -21,6 +21,10 @@ class AgentDAOInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_by_name(self, name: str) -> AgentDBE | None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def update(
         self,
         id: UUID,
