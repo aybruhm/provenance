@@ -9,16 +9,19 @@ from apis.fastapi.escalations import EscalationAPIRouter
 from apis.fastapi.gateway import ExecutionGatewayAPIRouter
 from apis.fastapi.policy import PolicyAPIRouter
 from apis.fastapi.reports import ReportsAPIRouter
+from apis.fastapi.tenants import TenantAPIRouter
 from core.audit_events.service import AuditEventService
 from core.escalations.manager import EscalationManager
 from core.escalations.service import EscalationService
 from core.policy.service import PolicyEngine
 from core.reports.service import ComplianceReportService
+from core.tenants.service import TenantService
 from core.users.auth import AuthService
 from core.users.service import UserService
 from dbs.postgres.audit_events.dao import AuditEventDAO
 from dbs.postgres.engine import cleanup_connections, test_connection
 from dbs.postgres.escalations.dao import EscalationDAO
+from dbs.postgres.tenants.dao import TenantDAO
 from dbs.postgres.users.dao import UserDAO
 from middlewares.jwt_bearer import JWTCookie
 
@@ -55,6 +58,7 @@ jwt_cookie = JWTCookie()
 audit_event_dao = AuditEventDAO()
 escalation_dao = EscalationDAO()
 user_dao = UserDAO()
+tenant_dao = TenantDAO()
 
 # Initialize services
 user_service = UserService(dao=user_dao)
@@ -74,6 +78,7 @@ report_service = ComplianceReportService(
     escalation_service=escalation_service,
     audit_event_service=audit_service,
 )
+tenant_service = TenantService(tenant_dao=tenant_dao)
 
 # Initialize routers
 execution_gateway_router = ExecutionGatewayAPIRouter(
@@ -97,6 +102,10 @@ users_auth_router = UsersAuthAPIRouter(
     jwt_cookie=jwt_cookie,
     auth_service=auth_service,
 )
+tenant_router = TenantAPIRouter(
+    tenant_service=tenant_service,
+)
+
 
 # Register routers
 api_v1_router.include_router(
@@ -123,6 +132,11 @@ api_v1_router.include_router(
     reports_router.router,
     tags=["Reports"],
     prefix="/reports",
+)
+api_v1_router.include_router(
+    tenant_router.router,
+    tags=["Tenants"],
+    prefix="/tenants",
 )
 api_v1_router.include_router(
     users_auth_router.router,
