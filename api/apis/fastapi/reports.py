@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from core.reports.service import ComplianceReportService
+from services.dependencies import get_current_user
 
 
 class ReportsAPIRouter:
@@ -8,7 +9,9 @@ class ReportsAPIRouter:
         self.report_service = report_service
 
         # Initialize api router
-        self.router = APIRouter()
+        self.router = APIRouter(
+            dependencies=[Depends(get_current_user)],
+        )
 
         # Register routes
         self.router.add_api_route(

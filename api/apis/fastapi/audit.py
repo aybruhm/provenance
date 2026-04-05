@@ -1,12 +1,13 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 
 from apis.fastapi.dtos import (
     AuditEventIntegrityResponseDTO,
     AuditEventResponseDTO,
 )
 from core.audit_events.service import AuditEventService
+from services.dependencies import get_current_user
 
 
 class AuditAPIRouter:
@@ -14,7 +15,9 @@ class AuditAPIRouter:
         self.audit_service = audit_service
 
         # Initialize api router
-        self.router = APIRouter()
+        self.router = APIRouter(
+            dependencies=[Depends(get_current_user)],
+        )
 
         # Register routes
         self.router.add_api_route(

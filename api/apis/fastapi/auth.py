@@ -37,7 +37,7 @@ class UsersAuthAPIRouter:
         self.auth_service = auth_service
         self.users_service = auth_service.user_service
 
-        self.router = APIRouter(prefix="/auth", tags=["Auth"])
+        self.router = APIRouter()
 
         # register routes
         self.router.add_api_route(

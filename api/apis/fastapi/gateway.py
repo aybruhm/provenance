@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 
 from apis.fastapi.dtos import (
     EscalationCreateRequestDTO,
@@ -12,6 +12,7 @@ from core.audit_events.service import utils as audit_utils
 from core.escalations.manager import EscalationManager
 from core.escalations.service import EscalationService
 from core.policy.service import PolicyEngine
+from services.dependencies import get_current_user
 
 
 class ExecutionGatewayAPIRouter:
@@ -28,7 +29,9 @@ class ExecutionGatewayAPIRouter:
         self.escalation_service = escalation_service
 
         # Initialize api router
-        self.router = APIRouter()
+        self.router = APIRouter(
+            dependencies=[Depends(get_current_user)],
+        )
 
         # Register routes
         self.router.add_api_route(

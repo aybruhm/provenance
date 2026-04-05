@@ -1,14 +1,18 @@
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import PlainTextResponse
+
+from services.dependencies import get_current_user
 
 
 class PolicyAPIRouter:
     def __init__(self):
 
         # Initialize api router
-        self.router = APIRouter()
+        self.router = APIRouter(
+            dependencies=[Depends(get_current_user)],
+        )
 
         # Register routes
         self.router.add_api_route(

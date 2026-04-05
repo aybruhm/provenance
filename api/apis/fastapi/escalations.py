@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from apis.fastapi.dtos import (
     EscalationDecisionRequestDTO,
@@ -9,6 +9,7 @@ from apis.fastapi.dtos import (
 )
 from core.escalations.manager import EscalationManager
 from core.escalations.service import EscalationService
+from services.dependencies import get_current_user
 from utils.logger_utils import logger
 
 
@@ -22,7 +23,9 @@ class EscalationAPIRouter:
         self.escalation_manager = escalation_manager
 
         # Initialize api router
-        self.router = APIRouter()
+        self.router = APIRouter(
+            dependencies=[Depends(get_current_user)],
+        )
 
         # Register routes
         self.router.add_api_route(
