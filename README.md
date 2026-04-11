@@ -104,7 +104,7 @@ uv run tests/manual/e2e_demo.py
 
 Expected Output
 
-> **Note on hash-chain integrity:** The demo runs two separate agent sessions. Because the audit log is scoped globally, events from session 2 interleave with session 1 in the chain — causing the integrity scan to report `COMPROMISED`. This is expected demo behaviour and demonstrates that the detection mechanism is working correctly.
+> **Note on hash-chain integrity:** The demo runs three separate agent sessions. Because the audit log is scoped globally, events from session 2 interleave with session 1 in the chain — causing the integrity scan to report `COMPROMISED`. This is expected demo behaviour and demonstrates that the detection mechanism is working correctly.
 
 ```bash
 ────────────────────────────────────────────────────────────────
@@ -123,7 +123,7 @@ Expected Output
 [5] Tenant Policy ID: 019d7ebc-2e68-7fb2-b3d6-333a03e769d0
 
 [6] Small payment: £50 GBP  →  expect ALLOW
-    Decision : ❌ BLOCK
+    Decision : ✗ BLOCK
     Reason   : Escalation TIMEOUT — action blocked
 
 [7] Large payment: £800 GBP  →  expect ESCALATE → human APPROVES → ALLOW
