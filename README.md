@@ -1,6 +1,6 @@
-# [Proof-of-Concept] Sentinel - Agentic Audit & Compliance Layer
+# [Proof-of-Concept] Provenance - Agentic Audit & Compliance Layer
 
-Sentinel is a compliance and governance middleware for AI agent deployments. It enables enterprises and AI-native companies to deploy autonomous agents with confidence by providing:
+Provenance is a compliance and governance middleware for AI agent deployments. It enables enterprises and AI-native companies to deploy autonomous agents with confidence by providing:
 
 - tamper-evident audit logging of all agent actions
 - real-time policy enforcement before execution
@@ -23,10 +23,10 @@ Without answers to these questions, enterprises either block AI agent deployment
 
 ## How It Works
 
-Every agent action is routed through the Sentinel gateway before execution:
+Every agent action is routed through the Provenance gateway before execution:
 
 ```
-Agent  →  Sentinel Gateway  →  Policy Engine  →  ALLOW / BLOCK / ESCALATE
+Agent  →  Provenance Gateway  →  Policy Engine  →  ALLOW / BLOCK / ESCALATE
                                                         ↓
                                                Append-only Audit Log
                                                (hash-chained, tamper-evident)
@@ -34,7 +34,7 @@ Agent  →  Sentinel Gateway  →  Policy Engine  →  ALLOW / BLOCK / ESCALATE
                                           ESCALATE: Human Approver (async)
 ```
 
-1. The **agent** sends an action request to the Sentinel gateway instead of executing directly.
+1. The **agent** sends an action request to the Provenance gateway instead of executing directly.
 2. The **policy engine** evaluates the action against a declarative per-tenant policy.
 3. The gateway returns a decision: `ALLOW`, `BLOCK`, or `ESCALATE`.
 4. Every decision is appended to a **hash-chained audit log** — each entry includes a hash of the previous entry, making tampering detectable.
@@ -108,7 +108,7 @@ Expected Output
 
 ```bash
 ────────────────────────────────────────────────────────────────
-  SENTINEL  —  Agentic Audit & Compliance Layer  (POC Demo)
+  PROVENANCE  —  Agentic Audit & Compliance Layer  (POC Demo)
 ────────────────────────────────────────────────────────────────
 [0] Agent session running on: sess_335c3e5ecaf5
 
@@ -191,19 +191,19 @@ Expected Output
     Allowed            : 3
     Blocked            : 6
     Human approved     : 0
-    All payment-related agent actions were intercepted, policy-evaluated, and logged prior to execution. Actions exceeding the approved threshold were held for named human approval before proceeding. No payment action bypassed the Sentinel gateway.
+    All payment-related agent actions were intercepted, policy-evaluated, and logged prior to execution. Actions exceeding the approved threshold were held for named human approval before proceeding. No payment action bypassed the Provenance gateway.
 
 ────────────────────────────────────────────────────────────────
   POC COMPLETE
 ────────────────────────────────────────────────────────────────
-  All Sentinel flows exercised successfully.
+  All Provenance flows exercised successfully.
 
   Interactive API docs: http://localhost:4587/docs
 ```
 
 #### Integration
 
-Currently, this proof-of-concept only contains the backend implementation. TypeScript and Python SDKs are planned for the next iteration to simplify integration. If you prefer to use the APIs directly, you can find an example agent policy template [here](https://github.com/aybruhm/sentinel/blob/main/api/resources/policies/agent_policy_template.json) and the e2e code [here](https://github.com/aybruhm/sentinel/blob/main/api/tests/manual/e2e_demo.py).
+Currently, this proof-of-concept only contains the backend implementation. TypeScript and Python SDKs are planned for the next iteration to simplify integration. If you prefer to use the APIs directly, you can find an example agent policy template [here](https://github.com/aybruhm/provenance/blob/main/api/resources/policies/agent_policy_template.json) and the e2e code [here](https://github.com/aybruhm/provenance/blob/main/api/tests/manual/e2e_demo.py).
 
 ## Next Steps
 
