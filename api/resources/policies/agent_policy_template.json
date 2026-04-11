@@ -1,0 +1,53 @@
+{
+    "name": "agent_policy_template",
+    "version": "0.1",
+    "description": "Sentinel policy template for the Acme Corp payment processing agent. Enforces currency allow-list, per-action amount thresholds, and hard blocks on data-destructive operations.",
+    "rules": [
+        {
+            "action": "data.*",
+            "reason": "Data mutations require direct human action — agents are not authorized",
+            "on_match": "BLOCK"
+        },
+        {
+            "action": "payments.initiate",
+            "reason": "Currency not on the approved list [GBP, USD, EUR]. Escalating to compliance team for manual review.",
+            "conditions": [
+                {
+                    "name": "cuurency_check",
+                    "field": "currency",
+                    "operator": "in",
+                    "value": ["GBP", "USD", "EUR"]
+                }
+            ],
+            "on_violation": "ESCALATE"
+        },
+        {
+            "action": "payments.initiate",
+            "reason": "Payment exceeds the £500 autonomous limit. Human approval required before execution.",
+            "conditions": [
+                {
+                    "name": "amount_check",
+                    "field": "amount",
+                    "operator": ">=",
+                    "value": 500
+                }
+            ],
+            "on_violation": "ESCALATE"
+        },
+        {
+            "action": "payments.initiate",
+            "reason": "Payment within approved parameters — amount ≤ £500, currency approve",
+            "on_match": "ALLOW"
+        },
+        {
+            "action": "email.send",
+            "reason": "Email dispatch is unrestricted for this agent",
+            "on_match": "ALLOW"
+        },
+        {
+            "action": "*",
+            "reason": "No specific policy rule matched; default block",
+            "on_match": "BLOCK"
+        }
+    ]
+}
