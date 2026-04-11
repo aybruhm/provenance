@@ -12,9 +12,7 @@ class TenantPolicyInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_tenant_policy(
-        self, tenant_id: UUID, policy_id: UUID
-    ) -> TenantPolicyDBE | None:
+    async def get_tenant_policy(self, tenant_policy_id: UUID) -> TenantPolicyDBE | None:
         raise NotImplementedError
 
     @abstractmethod

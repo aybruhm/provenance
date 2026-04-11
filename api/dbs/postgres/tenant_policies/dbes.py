@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 
 from dbs.postgres.shared.dbas import IDMixin, TimestampMixin
 
@@ -27,3 +28,6 @@ class TenantPolicyDBE(IDMixin, TimestampMixin):
     active = Column(Boolean, default=True)
     applied_at = Column(DateTime, server_default=func.now())
     revoked_at = Column(DateTime, nullable=True)
+
+    tenant = relationship("TenantDBE", backref="tenant_policies")
+    policy = relationship("PolicyDBE", backref="tenant_policies")

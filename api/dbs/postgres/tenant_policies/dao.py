@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy import delete, select, update
+from sqlalchemy.orm import joinedload
 
 from dbs.postgres.engine import get_db_session
 from dbs.postgres.tenant_policies.dbes import TenantPolicyDBE
@@ -22,13 +23,14 @@ class TenantPolicyDAO(TenantPolicyInterface):
             await session.commit()
             return tenant_policy_dbe
 
-    async def get_tenant_policy(
-        self, tenant_id: UUID, policy_id: UUID
-    ) -> TenantPolicyDBE | None:
+    async def get_tenant_policy(self, tenant_policy_id: UUID) -> TenantPolicyDBE | None:
         async with get_db_session() as session:
-            stmt = select(TenantPolicyDBE).filter_by(
-                tenant_id=tenant_id,
-                policy_id=policy_id,
+            stmt = (
+                select(TenantPolicyDBE)
+                .options(
+                    joinedload(TenantPolicyDBE.policy),
+                )
+                .filter_by(id=tenant_policy_id)
             )
             result = await session.execute(stmt)
             tenant_policy_dbe = result.scalar_one_or_none()
