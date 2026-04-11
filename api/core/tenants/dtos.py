@@ -1,10 +1,7 @@
-from uuid import UUID
-
 from pydantic import BaseModel
 
 
 class CreateTenantDTO(BaseModel):
-    policy_id: str
     name: str
 
 

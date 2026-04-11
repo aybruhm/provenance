@@ -12,7 +12,6 @@ class TenantDAOInterface(ABC):
     async def create(
         self,
         name: str,
-        policy_id: str,
         user_id: UUID,
     ) -> TenantDBE:
         raise NotImplementedError

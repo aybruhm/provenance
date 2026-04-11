@@ -14,15 +14,10 @@ class TenantDAO(TenantDAOInterface):
     async def create(
         self,
         name: str,
-        policy_id: str,
         user_id: UUID,
     ) -> TenantDBE:
         async with get_db_session() as session:
-            tenant_dbe = TenantDBE(
-                name=name,
-                policy_id=policy_id,
-                user_id=user_id,
-            )
+            tenant_dbe = TenantDBE(name=name, user_id=user_id)
             session.add(tenant_dbe)
             await session.commit()
             return tenant_dbe

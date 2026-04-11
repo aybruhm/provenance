@@ -13,7 +13,6 @@ class TenantService:
         return TenantDTO(
             id=str(dbe.id),
             name=dbe.name,  # type: ignore
-            policy_id=dbe.policy_id,  # type: ignore
             created_at=dbe.created_at.isoformat(),  # type: ignore
             updated_at=dbe.updated_at.isoformat(),  # type: ignore
         )
@@ -29,7 +28,6 @@ class TenantService:
 
         tenant_dbe = await self.tenant_dao.create(
             name=create_data.name,
-            policy_id=create_data.policy_id,
             user_id=user_id,
         )
         tenant_dto = self._map_dbe_to_dto(dbe=tenant_dbe)
