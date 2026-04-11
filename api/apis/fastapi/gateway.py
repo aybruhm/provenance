@@ -11,9 +11,10 @@ from core.audit_events.service import AuditEventService
 from core.audit_events.service import utils as audit_utils
 from core.escalations.manager import EscalationManager
 from core.escalations.service import EscalationService
-from core.policy.service import PolicyEngine
+from core.policy.engine import PolicyEngine
 from core.tenants.service import TenantService
 from services.dependencies import get_current_user
+from utils.logger_utils import logger
 
 
 class ExecutionGatewayAPIRouter:
@@ -66,7 +67,9 @@ class ExecutionGatewayAPIRouter:
                 reason="Tenant not found",
             )
 
-        policy = await self.policy_engine.load_policy(policy_id=tenant.policy_id)
+        policy = await self.policy_engine.load_policy(
+            tenant_policy_id=execute_request.tenant_policy_id
+        )
         parameters = execute_request.parameters or dict()
         decision, reason = self.policy_engine.evaluate_policy(
             policy=policy,
@@ -104,7 +107,7 @@ class ExecutionGatewayAPIRouter:
             )
             escalation_id = str(escalation.id)
 
-            print(
+            logger.info(
                 f"\n  ESCALATION  id={escalation_id}\n"
                 f"   action={execute_request.action}  reason={reason}\n"
                 f"   → POST /v1/escalations/{escalation_id}/decide\n"
@@ -134,6 +137,7 @@ class ExecutionGatewayAPIRouter:
             session_id=execute_request.session_id,
             agent_id=execute_request.agent_id,
             tenant_id=execute_request.tenant_id,
+            tenant_policy_id=execute_request.tenant_policy_id,
             action=execute_request.action,
             parameters=execute_request.parameters,
             decision=final_decision,
@@ -151,6 +155,3 @@ class ExecutionGatewayAPIRouter:
             escalation_id=escalation_id,
             actor_human_id=actor_human_id,
         )
-
-
-# ── escalation management ─────────────────────────────────────────────────────

@@ -34,6 +34,7 @@ class AgentUpdateRequestDTO(UpdateAgentDTO):
 
 
 class ExecuteRequestDTO(CreateAuditEventDTO):
+    tenant_policy_id: str
     idempotency_key: str | None = None
 
 
