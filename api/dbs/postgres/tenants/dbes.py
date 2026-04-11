@@ -19,7 +19,6 @@ class TenantDBE(IDMixin, TimestampMixin):
     )
 
     name = Column(String, nullable=False)
-
     user_id = Column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
