@@ -109,7 +109,7 @@ escalation_router = EscalationAPIRouter(
     escalation_service=escalation_service,
     escalation_manager=escalation_manager,
 )
-policy_router = PolicyAPIRouter()
+policy_router = PolicyAPIRouter(policy_service=policy_service)
 reports_router = ReportsAPIRouter(
     report_service=report_service,
 )
