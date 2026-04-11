@@ -15,7 +15,8 @@ from core.agents.service import AgentService
 from core.audit_events.service import AuditEventService
 from core.escalations.manager import EscalationManager
 from core.escalations.service import EscalationService
-from core.policy.service import PolicyEngine
+from core.policy.engine import PolicyEngine
+from core.policy.service import PolicyService
 from core.reports.service import ComplianceReportService
 from core.tenants.service import TenantService
 from core.users.auth import AuthService
@@ -24,6 +25,8 @@ from dbs.postgres.agents.dao import AgentDAO
 from dbs.postgres.audit_events.dao import AuditEventDAO
 from dbs.postgres.engine import cleanup_connections, test_connection
 from dbs.postgres.escalations.dao import EscalationDAO
+from dbs.postgres.policy.dao import PolicyDAO
+from dbs.postgres.tenant_policies.dao import TenantPolicyDAO
 from dbs.postgres.tenants.dao import TenantDAO
 from dbs.postgres.users.dao import UserDAO
 from middlewares.jwt_bearer import JWTCookie
@@ -63,11 +66,17 @@ escalation_dao = EscalationDAO()
 user_dao = UserDAO()
 tenant_dao = TenantDAO()
 agent_dao = AgentDAO()
+policy_dao = PolicyDAO()
+tenant_policy_dao = TenantPolicyDAO()
 
 # Initialize services
 user_service = UserService(dao=user_dao)
 auth_service = AuthService(user_service=user_service)
-policy_engine = PolicyEngine()
+policy_service = PolicyService(
+    dao=policy_dao,
+    tenant_policy_dao=tenant_policy_dao,
+)
+policy_engine = PolicyEngine(service=policy_service)
 audit_service = AuditEventService(
     audit_event_dao=audit_event_dao,
     escalation_dao=escalation_dao,
