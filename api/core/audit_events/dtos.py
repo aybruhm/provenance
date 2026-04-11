@@ -8,6 +8,7 @@ class CreateAuditEventDTO(BaseModel):
     agent_id: str
     tenant_id: str
     action: str
+    tenant_policy_id: str
     parameters: Dict[str, Any] | None = None
     decision: str
     escalation_id: str | None = None

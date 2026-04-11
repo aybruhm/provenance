@@ -24,6 +24,7 @@ class AuditEventService:
             session_id=dbe.session_id,  # type: ignore
             agent_id=str(dbe.agent_id),  # type: ignore
             tenant_id=str(dbe.tenant_id),  # type: ignore
+            tenant_policy_id=str(dbe.tenant_policy_id),  # type: ignore
             action=dbe.action,  # type: ignore
             payload_hash=dbe.payload_hash,  # type: ignore
             decision=dbe.decision,  # type: ignore
@@ -38,6 +39,7 @@ class AuditEventService:
             session_id=dto.session_id,
             agent_id=dto.agent_id,
             tenant_id=dto.tenant_id,
+            tenant_policy_id=dto.tenant_policy_id,
             action=dto.action,
             decision=dto.decision,
             escalation_id=dto.escalation_id,
