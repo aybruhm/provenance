@@ -82,11 +82,13 @@ class PolicyEngine:
         return True, ""
 
     # ── loader ────────────────────────────────────────────────────────────────────
-    async def load_policy(self, policy_id: str) -> PolicyDTO:
-        policy = await self.service.get_policy(policy_id=UUID(policy_id))
+    async def load_policy(self, tenant_policy_id: str) -> PolicyDTO:
+        policy = await self.service.get_tenant_policy(
+            tenant_policy_id=UUID(tenant_policy_id)
+        )
         if not policy:
             return PolicyDTO(
-                id=policy_id,
+                id=tenant_policy_id,
                 name="default-passthrough",
                 version="0.0",
                 description="Default passthrough policy",
