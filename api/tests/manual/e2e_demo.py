@@ -10,7 +10,55 @@ import aiohttp
 
 BASE = "http://localhost:4587"
 SESSION = f"sess_{uuid.uuid4().hex[:12]}"
-timeout = aiohttp.ClientTimeout(total=90.0)
+TIMOUT = aiohttp.ClientTimeout(total=90.0)
+DEFAULT_POLICY_RULES = [
+    {
+        "action": "data.*",
+        "reason": "Data mutations require direct human action — agents are not authorized",
+        "on_match": "BLOCK",
+    },
+    {
+        "action": "payments.initiate",
+        "reason": "Currency not on the approved list [GBP, USD, EUR]. Escalating to compliance team for manual review.",
+        "conditions": [
+            {
+                "name": "cuurency_check",
+                "field": "currency",
+                "operator": "in",
+                "value": ["GBP", "USD", "EUR"],
+            }
+        ],
+        "on_violation": "ESCALATE",
+    },
+    {
+        "action": "payments.initiate",
+        "reason": "Payment exceeds the £500 autonomous limit. Human approval required before execution.",
+        "conditions": [
+            {
+                "name": "amount_check",
+                "field": "amount",
+                "operator": ">=",
+                "value": 500,
+            }
+        ],
+        "on_violation": "ESCALATE",
+    },
+    {
+        "action": "payments.initiate",
+        "reason": "Payment within approved parameters — amount ≤ £500, currency approve",
+        "on_match": "ALLOW",
+    },
+    {
+        "action": "email.send",
+        "reason": "Email dispatch is unrestricted for this agent",
+        "on_match": "ALLOW",
+    },
+    {
+        "action": "*",
+        "reason": "No specific policy rule matched; default block",
+        "on_match": "BLOCK",
+    },
+]
 
 
 class Decision(StrEnum):
@@ -149,6 +197,62 @@ async def get_or_create_agent(
     return resp_json["agent"]["id"]  # type: ignore[return-value]
 
 
+# --- get_or_create policy ---------------------------------------
+
+
+async def get_or_create_policy(
+    client: aiohttp.ClientSession,
+    tenant_id: str,
+    name: str,
+    description: str,
+    rules: list[Dict[str, Any]],
+    version: str = "0.1",
+) -> str:
+    res = await client.get(f"{BASE}/v1/policies/?tenant_id={tenant_id}")
+    resp_json = await res.json()
+    policies = resp_json["policies"]  # type: ignore[return-value]
+    if len(policies) >= 1:
+        for policy in policies:
+            if policy["name"] == name:
+                return policy["id"]
+
+    resp = await client.post(
+        f"{BASE}/v1/policies/",
+        json=dict(
+            name=name,
+            version=version,
+            description=description,
+            rules=rules,
+        ),
+    )
+    resp.raise_for_status()
+    resp_json = await resp.json()
+    return resp_json["policy"]["id"]  # type: ignore[return-value]
+
+
+# --- get_or_assign tenant policy ---------------------------------------
+
+
+async def get_or_assign_tenant_policy(
+    client: aiohttp.ClientSession,
+    tenant_id: str,
+    policy_id: str,
+) -> str:
+    res = await client.get(f"{BASE}/v1/policies/{policy_id}?tenant_id={tenant_id}")
+    resp_json = await res.json()
+    if "detail" in resp_json and "message" in resp_json["detail"]:
+        resp = await client.post(
+            f"{BASE}/v1/policies/{policy_id}/assign",
+            json=dict(tenant_id=tenant_id),
+        )
+        resp.raise_for_status()
+        resp_json = await resp.json()
+        return resp_json["tenant_policy_id"]
+
+    tenant_policy = resp_json["policy"]  # type: ignore[return-value]
+    return tenant_policy["tenant_policy_id"]
+
+
 # ── gateway execute ────────────────────────────────────────────────────────────
 
 
@@ -156,6 +260,7 @@ async def execute(
     client: aiohttp.ClientSession,
     agent_id: str,
     tenant_id: str,
+    tenant_policy_id: str,
     action: str,
     decision: str,
     parameters: Dict[str, Any],
@@ -166,11 +271,12 @@ async def execute(
             session_id=SESSION,
             agent_id=agent_id,
             tenant_id=tenant_id,
+            tenant_policy_id=tenant_policy_id,
             action=action,
             decision=decision,
             parameters=parameters,
         ),
-        timeout=timeout,
+        timeout=TIMOUT,
     )
     resp.raise_for_status()
     resp_json = await resp.json()
@@ -258,38 +364,41 @@ async def main() -> None:
     # Quick liveness check
     try:
         async with aiohttp.ClientSession() as ping:
-            await ping.get(f"{BASE}/health", timeout=timeout)
+            await ping.get(f"{BASE}/health", timeout=TIMOUT)
     except Exception:
         print(f"{RED}Sentinel gateway not reachable at {BASE}{RESET}")
         print("Start it first:  uvicorn main:app --reload --port 8000")
         sys.exit(1)
 
     header("SENTINEL  —  Agentic Audit & Compliance Layer  (POC Demo)")
-    print(f"Session : {DIM}{SESSION}{RESET}", end="\n")
+    step(0, f"Agent session running on: {DIM}{SESSION}{RESET}")
 
     # Auth flow
     token = None
-    async with aiohttp.ClientSession(timeout=timeout) as client:
+    async with aiohttp.ClientSession(timeout=TIMOUT) as client:
         # --- 1. Get or Create user
         token = await get_or_create_user(
             client,
             "abc",
             "qwerty",
         )
-        print("Authenticated as [u:abc]...")
+        step(1, "Authenticated as [u:abc]")
 
     # Prep flow
     tenant_id = None
     agent_id = None
     headers = {"Cookie": f"access_token={token}"}
-    async with aiohttp.ClientSession(timeout=timeout, headers=headers) as client:
+    async with aiohttp.ClientSession(
+        timeout=TIMOUT,
+        headers=headers,
+    ) as client:
         # --- 2. Get or create tenant
         tenant_id = await get_or_create_tenant(
             client,
             "acme",
             policy_id="policy_agent",
         )
-        print(f"Tenant ID: {tenant_id}")
+        step(2, f"Tenant ID: {tenant_id}")
 
         # --- 3. Get or create agent
         agent_id = await get_or_create_agent(
@@ -297,30 +406,55 @@ async def main() -> None:
             tenant_id,
             f"payment_agent_{uuid.uuid4().hex[:8]}",
         )
-        print(f"Agent ID: {agent_id}")
+        step(3, f"Agent ID: {agent_id}")
+
+        # --- 4. Get or create policy
+        policy_name = f"policy_{uuid.uuid4().hex[:8]}"
+        policy_id = await get_or_create_policy(
+            client,
+            tenant_id,
+            name=policy_name,
+            description=f"Description for policy {policy_name}",
+            rules=DEFAULT_POLICY_RULES,
+        )
+        step(4, f"Policy ID: {policy_id}")
+
+        # --- 5. Get or assign tenant policy
+        tenant_policy_id = await get_or_assign_tenant_policy(
+            client,
+            tenant_id,
+            policy_id,
+        )
+        step(5, f"Tenant Policy ID: {tenant_policy_id}")
 
     # Main flow
-    async with aiohttp.ClientSession(timeout=timeout, headers=headers) as client:
-        # ── 4. Small payment → ALLOW ──────────────────────────────────────────
-        step(1, "Small payment: £50 GBP  →  expect ALLOW")
+    async with aiohttp.ClientSession(
+        timeout=TIMOUT,
+        headers=headers,
+    ) as client:
+        # ── 6. Small payment → ALLOW ──────────────────────────────────────────
+        step(6, "Small payment: £50 GBP  →  expect ALLOW")
         r = await execute(
             client,
             agent_id,
             tenant_id,
+            tenant_policy_id,
             "payments.initiate",
             Decision.ALLOW,
             {"amount": 50, "currency": "GBP", "recipient_id": "rec_abc123"},
         )
         result(r["decision"], r["reason"])
 
-        # ── 5. Large payment → ESCALATE → APPROVE ────────────────────────────
-        step(2, "Large payment: £800 GBP  →  expect ESCALATE → human APPROVES → ALLOW")
+        # ── 7. Large payment → ESCALATE → APPROVE ────────────────────────────
+        step(7, "Large payment: £800 GBP  →  expect ESCALATE → human APPROVES → ALLOW")
         holder: dict = {}
+
         async def _do_large_payment():
             holder["large"] = await execute(
                 client,
                 agent_id,
                 tenant_id,
+                tenant_policy_id,
                 "payments.initiate",
                 Decision.ESCALATE,
                 {"amount": 800, "currency": "GBP", "recipient_id": "rec_xyz789"},
@@ -339,9 +473,9 @@ async def main() -> None:
             extra=f"Escalation : {DIM}{r.get('escalation_id')}{RESET}",
         )
 
-        # ── 6. Disallowed currency → ESCALATE → REJECT ────────────────────────
+        # ── 8. Disallowed currency → ESCALATE → REJECT ────────────────────────
         step(
-            3,
+            8,
             "Payment in JPY (disallowed currency)  →  expect ESCALATE → REJECT → BLOCK",
         )
 
@@ -350,6 +484,7 @@ async def main() -> None:
                 client,
                 agent_id,
                 tenant_id,
+                tenant_policy_id,
                 "payments.initiate",
                 Decision.ESCALATE,
                 {"amount": 100, "currency": "JPY", "recipient_id": "rec_jpy001"},
@@ -371,32 +506,34 @@ async def main() -> None:
             extra=f"Escalation : {DIM}{r.get('escalation_id')}{RESET}",
         )
 
-        # ── 7. Hard-blocked action ────────────────────────────────────────────
-        step(4, "data.delete (bulk)  →  expect BLOCK (hard policy)")
+        # ── 10. Hard-blocked action ────────────────────────────────────────────
+        step(10, "data.delete (bulk)  →  expect BLOCK (hard policy)")
         r = await execute(
             client,
             agent_id,
             tenant_id,
+            tenant_policy_id,
             "data.delete",
             Decision.BLOCK,
             {"table": "users", "condition": "WHERE created_at < '2020-01-01'"},
         )
         result(r["decision"], r["reason"])
 
-        # ── 8. Default passthrough ────────────────────────────────────────────
-        step(5, "email.send  →  expect ALLOW (default passthrough)")
+        # ── 11. Default passthrough ────────────────────────────────────────────
+        step(11, "email.send  →  expect ALLOW (default passthrough)")
         r = await execute(
             client,
             agent_id,
             tenant_id,
+            tenant_policy_id,
             "email.send",
             Decision.ALLOW,
             {"to": "customer@example.com", "template": "invoice_ready"},
         )
         result(r["decision"], r["reason"])
 
-        # ── 9. Audit log ──────────────────────────────────────────────────────
-        step(6, "Audit log (hash-chained)")
+        # ── 12. Audit log ──────────────────────────────────────────────────────
+        step(12, "Audit log (hash-chained)")
         resp = await client.get(f"{BASE}/v1/audit/{tenant_id}")
         resp_json = await resp.json()
         events = resp_json["events"] or []  # type: ignore[assignment]
@@ -419,8 +556,8 @@ async def main() -> None:
                 f"{esc_marker}"
             )
 
-        # ── 10. Integrity scan ─────────────────────────────────────────────────
-        step(7, "Hash-chain integrity scan")
+        # ── 13. Integrity scan ─────────────────────────────────────────────────
+        step(13, "Hash-chain integrity scan")
         resp = await client.get(f"{BASE}/v1/audit/integrity/{tenant_id}")
         resp_json = await resp.json()
         scan = resp_json["integrity"]  # type: ignore[assignment]
@@ -431,8 +568,8 @@ async def main() -> None:
         print(f"    Checked  : {scan['events_checked']} events")
         print(f"    Violations: {scan['violations'] or 'none'}")
 
-        # ── 11. Compliance reports ─────────────────────────────────────────────
-        step(8, "Compliance reports")
+        # ── 14. Compliance reports ─────────────────────────────────────────────
+        step(14, "Compliance reports")
 
         section("SOC 2 Type II — CC6")
         resp = await client.get(f"{BASE}/v1/reports/{tenant_id}/soc2")
