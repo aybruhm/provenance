@@ -23,6 +23,14 @@ class PolicyDAO(PolicyDAOInterface):
             policy_dbe = result.scalar_one_or_none()
             return policy_dbe
 
+    async def get_policy_by_name(self, name: str) -> PolicyDBE | None:
+        async with get_db_session() as session:
+            result = await session.execute(
+                select(PolicyDBE).where(PolicyDBE.name == name)
+            )
+            policy_dbe = result.scalar_one_or_none()
+            return policy_dbe
+
     async def update_policy(
         self,
         policy_id: UUID,

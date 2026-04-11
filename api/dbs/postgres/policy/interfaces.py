@@ -15,6 +15,10 @@ class PolicyDAOInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_policy_by_name(self, name: str) -> PolicyDBE | None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def update_policy(
         self,
         policy_id: UUID,
