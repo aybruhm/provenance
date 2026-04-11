@@ -8,6 +8,7 @@ from core.agents.dtos import AgentDTO
 from core.audit_events.dtos import AuditEventDTO
 from core.audit_events.types import ChainValidationResult
 from core.escalations.dtos import EscalationDecisionDTO, EscalationDTO
+from core.policy.dtos import PolicyDTO
 from core.reports.types import GDPRReport, PCIDSSReport, SOC2Report
 from core.tenants.dtos import TenantDTO
 
@@ -31,6 +32,22 @@ class AgentResponseDTO(BaseModel):
 
 class AgentListResponseDTO(BaseModel):
     agents: list[AgentDTO]
+
+
+# ------- Policies -------
+
+
+class TenantPolicyResponseDTO(BaseModel):
+    tenant_policy_id: UUID
+    policy: PolicyDTO
+
+
+class PolicyResponseDTO(BaseModel):
+    policy: PolicyDTO
+
+
+class PolicyListResponseDTO(BaseModel):
+    policies: list[PolicyDTO]
 
 
 # ------- Audits -------

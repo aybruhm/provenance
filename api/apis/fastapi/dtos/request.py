@@ -1,10 +1,12 @@
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel
 
 from core.agents.dtos import CreateAgentDTO, UpdateAgentDTO
 from core.audit_events.dtos import CreateAuditEventDTO
 from core.escalations.dtos import CreateEscalationDTO
+from core.policy.dtos import CreatePolicyDTO, UpdatePolicyDTO
 from core.tenants.dtos import CreateTenantDTO, UpdateTenantDTO
 from core.users.dtos import LoginUserDTO, RegisterUserDTO
 
@@ -30,11 +32,29 @@ class AgentUpdateRequestDTO(UpdateAgentDTO):
     pass
 
 
+# ------ Policies ----------
+
+
+class PolicyCreateRequestDTO(CreatePolicyDTO):
+    pass
+
+
+class PolicyUpdateRequestDTO(UpdatePolicyDTO):
+    pass
+
+
+class AssignPolicyToTenantRequestDTO(BaseModel):
+    tenant_id: UUID
+
+
+class DeactivateTenantPolicyRequestDTO(BaseModel):
+    active: bool
+
+
 # ----- Execution Gateway -----
 
 
 class ExecuteRequestDTO(CreateAuditEventDTO):
-    tenant_policy_id: str
     idempotency_key: str | None = None
 
 
