@@ -45,6 +45,11 @@ class AuditEventDBE(IDMixin, TimestampMixin):
         nullable=False,
         default=uuid7,
     )
+    tenant_policy_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("tenant_policies.id", ondelete="SET NULL"),
+        nullable=False,
+    )
     action = Column(String, nullable=False)
     payload_hash = Column(String, nullable=False)  # SHA-256 of canonical JSON payload
     decision = Column(Enum(Decision, name="audit_event_decision"), nullable=False)
