@@ -16,6 +16,7 @@ class NormalizedOperation(StrEnum):
 
 
 class ConditionDTO(BaseModel):
+    name: str
     field: str
     operator: NormalizedOperation
     value: Any

@@ -19,6 +19,7 @@ class PolicyService:
     def _map_dto_to_dbe(self, dto: CreatePolicyDTO | UpdatePolicyDTO) -> PolicyDBE:
         return PolicyDBE(
             name=dto.name,
+            version=dto.version,
             description=dto.description,
             rules={"rules": [rule.model_dump() for rule in dto.rules]},
         )
@@ -30,36 +31,18 @@ class PolicyService:
             version=dbe.version,  # type: ignore
             description=dbe.description,  # type: ignore
             rules=dbe.rules.get("rules", []),
-            created_at=dbe.created_at,  # type: ignore
-            updated_at=dbe.updated_at,  # type: ignore
+            created_at=dbe.created_at.isoformat(),  # type: ignore
+            updated_at=dbe.updated_at.isoformat(),  # type: ignore
         )
 
     def _map_tenant_policy_dbe_to_dto(self, dbe: TenantPolicyDBE) -> PolicyDTO:
-        return PolicyDTO(
-            id=str(dbe.policy_id),
-            name=dbe.policy.name,  # type: ignore
-            version=dbe.policy.version,  # type: ignore
-            description=dbe.policy.description,  # type: ignore
-            rules=dbe.policy.rules.get("rules", []),  # type: ignore
-            created_at=dbe.policy.created_at,  # type: ignore
-            updated_at=dbe.policy.updated_at,  # type: ignore
-        )
+        return self._map_dbe_to_dto(dbe=dbe.policy)
 
     async def create_policy(self, create_dto: CreatePolicyDTO) -> PolicyDTO:
         dbe = self._map_dto_to_dbe(create_dto)
         policy_dbe = await self.dao.create_policy(policy_dbe=dbe)
         policy_dto = self._map_dbe_to_dto(dbe=policy_dbe)
         return policy_dto
-
-    async def get_tenant_policy(self, tenant_policy_id: UUID) -> PolicyDTO | None:
-        tenant_policy = await self.tenant_policy_dao.get_tenant_policy(
-            tenant_policy_id=tenant_policy_id
-        )
-        if not tenant_policy:
-            return None
-
-        tenant_policy_dto = self._map_tenant_policy_dbe_to_dto(dbe=tenant_policy)
-        return tenant_policy_dto
 
     async def get_policy(self, policy_id: UUID) -> PolicyDTO | None:
         policy_dbe = await self.dao.get_policy(policy_id=policy_id)
@@ -93,3 +76,64 @@ class PolicyService:
     async def delete_policy(self, policy_id: UUID) -> bool:
         await self.dao.delete_policy(policy_id=policy_id)
         return True
+
+    # ---- Tenant Policy ----------------
+
+    async def list_tenant_policies(self, tenant_id: UUID) -> list[PolicyDTO]:
+        tenant_policies_dbes = await self.tenant_policy_dao.list_tenant_policies(
+            tenant_id=tenant_id,
+        )
+        tenant_policies_dtos = [
+            self._map_tenant_policy_dbe_to_dto(dbe=tenant_policy_dbe)
+            for tenant_policy_dbe in tenant_policies_dbes
+        ]
+        return tenant_policies_dtos
+
+    async def assign_policy_to_tenant(
+        self, tenant_id: UUID, policy_id: UUID
+    ) -> tuple[UUID, PolicyDTO]:
+        tenant_policy = await self.tenant_policy_dao.create_tenant_policy(
+            tenant_id=tenant_id,
+            policy_id=policy_id,
+        )
+        tenant_policy_dto = self._map_tenant_policy_dbe_to_dto(dbe=tenant_policy)
+        return tenant_policy.id, tenant_policy_dto  # type: ignore
+
+    async def deactivate_tenant_policy(
+        self, tenant_policy_id: UUID, active: bool
+    ) -> bool:
+        policy_dbe = await self.tenant_policy_dao.update_tenant_policy(
+            tenant_policy_id=tenant_policy_id,
+            active=active,
+        )
+        if not policy_dbe:
+            return False
+
+        return policy_dbe.active  # type: ignore
+
+    async def get_tenant_policy(self, tenant_policy_id: UUID) -> PolicyDTO | None:
+        tenant_policy = await self.tenant_policy_dao.get_tenant_policy(
+            tenant_policy_id=tenant_policy_id
+        )
+        if not tenant_policy:
+            return None
+
+        tenant_policy_dto = self._map_tenant_policy_dbe_to_dto(dbe=tenant_policy)
+        return tenant_policy_dto
+
+    async def get_tenant_policy_by_tenant_and_policy(
+        self,
+        tenant_id: UUID,
+        policy_id: UUID,
+    ) -> tuple[UUID | None, PolicyDTO | None]:
+        tenant_policy = (
+            await self.tenant_policy_dao.get_tenant_policy_by_tenant_and_policy(
+                tenant_id=tenant_id,
+                policy_id=policy_id,
+            )
+        )
+        if not tenant_policy:
+            return None, None
+
+        tenant_policy_dto = self._map_tenant_policy_dbe_to_dto(dbe=tenant_policy)
+        return tenant_policy.id, tenant_policy_dto  # type: ignore
