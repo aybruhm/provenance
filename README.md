@@ -76,6 +76,17 @@ cp api/.env.template api/.env
 
 #### Run the application & apply schema migrations
 
+Before running the `run` make command, you must authenticate with the Docker Hardened Image repository (dhi.io).
+This is required because the project uses hardened container images from dhi.io in the Dockerfile.
+
+If you prefer not to authenticate with `dhi.io`, you can update the image references in the Dockerfile under `api/docker/dev.Dockerfile` to use alternative registries.
+
+To authenticate:
+
+```bash
+<docker_PAT> | docker login dhi.io -u <username> --password-stdin
+```
+
 ```bash
 make run
 make run_migrations
@@ -99,74 +110,86 @@ Expected Output
 ────────────────────────────────────────────────────────────────
   SENTINEL  —  Agentic Audit & Compliance Layer  (POC Demo)
 ────────────────────────────────────────────────────────────────
-Session : sess_a11dd2d9fa05
-Authenticated as [u:abc]...
-Tenant ID: 019d5f2b-3fbf-7342-945c-37f9a8464fb2
-Agent ID: 019d5fa0-166f-7d30-9366-c999a6d923be
+[0] Agent session running on: sess_335c3e5ecaf5
 
-[1] Small payment: £50 GBP  →  expect ALLOW
+[1] Authenticated as [u:abc]...
+
+[2] Tenant ID: 019d7e9c-f44b-7472-92a3-785f40fdc150
+
+[3] Agent ID: 019d7ebc-2da9-7812-a7bf-f5e5bcc7f32e
+
+[4] Policy ID: 019d7ebc-2dfa-7700-88fd-ec8e90364579
+
+[5] Tenant Policy ID: 019d7ebc-2e68-7fb2-b3d6-333a03e769d0
+
+[6] Small payment: £50 GBP  →  expect ALLOW
+    Decision : ❌ BLOCK
+    Reason   : Escalation TIMEOUT — action blocked
+
+[7] Large payment: £800 GBP  →  expect ESCALATE → human APPROVES → ALLOW
+    No pending escalation found!
     Decision : ✔ ALLOW
-    Reason   : Payment within approved parameters — amount ≤ £500, currency approved
+    Reason   : Payment within approved parameters — amount ≤ £500, currency approve
+    Escalation : None
 
-[2] Large payment: £800 GBP  →  expect ESCALATE → human APPROVES → ALLOW
+[8] Payment in JPY (disallowed currency)  →  expect ESCALATE → REJECT → BLOCK
     No pending escalation found!
     Decision : ✗ BLOCK
     Reason   : Escalation TIMEOUT — action blocked
-    Escalation : 019d5fa0-16ec-7d33-aa43-c2d2b2e38e3a
+    Escalation : 019d7ebc-5a39-7ea0-b853-ca8cd1295214
 
-[3] Payment in JPY (disallowed currency)  →  expect ESCALATE → REJECT → BLOCK
-    No pending escalation found!
-    Decision : ✗ BLOCK
-    Reason   : Escalation TIMEOUT — action blocked
-    Escalation : 019d5fa0-52ff-7813-a0c7-be46b93cbd65
-
-[4] data.delete (bulk)  →  expect BLOCK (hard policy)
+[10] data.delete (bulk)  →  expect BLOCK (hard policy)
     Decision : ✗ BLOCK
     Reason   : Data mutations require direct human action — agents are not authorized
 
-[5] email.send  →  expect ALLOW (default passthrough)
+[11] email.send  →  expect ALLOW (default passthrough)
     Decision : ✔ ALLOW
     Reason   : Email dispatch is unrestricted for this agent
 
-[6] Audit log (hash-chained)
+[12] Audit log (hash-chained)
 
   EVENT ID                      ACTION                          DECISION  PREV HASH
   ────────────────────────────  ──────────────────────────────  ────────  ────────────────────
-  019d5fa0-b68d-7ac2-b777-449c  email.send                      ALLOW     10d79be614f7d21b20...
-  019d5fa0-b62c-73a2-8a24-9d1d  data.delete                     BLOCK     dd80027fbcb83b79a0...
-  019d5fa0-5316-7d02-a420-4a42  payments.initiate               BLOCK     b205bf301b5fd705b5... 👤
-  019d5fa0-16f4-7631-bf75-5ac1  payments.initiate               BLOCK     ced336f2d21f331a00... 👤
-  019d5fa0-16d9-7ca3-8ebc-7d6f  payments.initiate               ALLOW     e6b208bf028dae0431...
-  019d5f9b-b2d6-7ef2-a000-5b48  email.send                      ALLOW     e00fc5556738cc430a...
-  019d5f9b-b280-7411-ae38-44b9  data.delete                     BLOCK     fe73e4455bb0d39f55...
-  019d5f9b-924c-7fb2-92d5-022d  payments.initiate               BLOCK     4d43c61b73e8fcd6ee... 👤
-  019d5f9b-7228-7273-8afe-4c3f  payments.initiate               BLOCK     6d5cf0a710359aeea9... 👤
-  019d5f9b-71fe-7602-916b-1ded  payments.initiate               ALLOW     4d3cc6f6bba531847a...
+  019d7ebc-7a81-7f41-98c8-b8de  email.send                      ALLOW     4c2e466325e813f16d...
+  019d7ebc-7a46-7513-82ff-3ae5  data.delete                     BLOCK     b3a7f49864051dcc78...
+  019d7ebc-5a61-7531-a8c0-27bd  payments.initiate               BLOCK     0c13e0298a0ba30f9a... 👤
+  019d7ebc-2ee8-7461-ae1f-adf1  payments.initiate               ALLOW     c1221028a6bad20cb8...
+  019d7ebc-2ece-70e2-806b-ba06  payments.initiate               BLOCK     ef30ae378ce25e6a82... 👤
+  019d7ebb-a9a6-7ed2-b0c9-4248  email.send                      ALLOW     75ac44cf20e8e11363...
+  019d7ebb-a95b-7ee0-858a-1d08  data.delete                     BLOCK     5b3aa339e9203e12a0...
+  019d7ebb-8946-7421-8462-5807  payments.initiate               BLOCK     53790549b0165e8db9... 👤
+  019d7ebb-6935-78c2-8038-30f1  payments.initiate               ALLOW     1bfe2d518a988df45a...
+  019d7ebb-6923-7bb0-ae8d-168a  payments.initiate               BLOCK     260c2b7b11c14efb72... 👤
+  019d7eb9-a717-76c2-91d5-5fc2  email.send                      ALLOW     9f2813b9f559152511...
+  019d7eb9-a6cd-7391-8a7c-fb13  data.delete                     BLOCK     a1de308c82a982a4a3...
+  019d7eb9-86dc-7071-b41a-0ebd  payments.initiate               BLOCK     1d1f4ad71e2c4c5280... 👤
+  019d7eb9-66b2-7ed3-aa16-73fe  payments.initiate               ALLOW     484044b2c068058a83...
+  019d7eb9-669b-72f0-bb58-8fec  payments.initiate               BLOCK     4d3cc6f6bba531847a... 👤
 
-[7] Hash-chain integrity scan
+[13] Hash-chain integrity scan
     Chain    : ✗ COMPROMISED
-    Checked  : 10 events
-    Violations: [{'position': 0, 'event_id': '019d5fa0-b68d-7ac2-b777-449c5980a342', 'expected_prev_hash': '4d3cc6f6bba531847a989106d8c33f1bbf9a47974a9dadc95abaa76fe870219a', 'actual_prev_hash': '10d79be614f7d21b20f7e1da3c2559a94f5888c0dff88e6bdef3f55b796a3ee3'}, {'position': 1, 'event_id': '019d5fa0-b62c-73a2-8a24-9d1d1e898578', 'expected_prev_hash': 'bc6fc7d9620a82d198cc7b6be2248fd3de00ef1e6ecb84642d2d804bf37e68c4', 'actual_prev_hash': 'dd80027fbcb83b79a076fed17a26cf0460307a9d1ab319fe1907264cadfc09b1'}, {'position': 2, 'event_id': '019d5fa0-5316-7d02-a420-4a4277231764', 'expected_prev_hash': '10d79be614f7d21b20f7e1da3c2559a94f5888c0dff88e6bdef3f55b796a3ee3', 'actual_prev_hash': 'b205bf301b5fd705b52e3d322e78b7e2256c17b4096ce3b3be93721b7814a8f5'}, {'position': 3, 'event_id': '019d5fa0-16f4-7631-bf75-5ac1f463b090', 'expected_prev_hash': 'dd80027fbcb83b79a076fed17a26cf0460307a9d1ab319fe1907264cadfc09b1', 'actual_prev_hash': 'ced336f2d21f331a00eb17923d9132cf394b895add516771dd7e499397038b28'}, {'position': 4, 'event_id': '019d5fa0-16d9-7ca3-8ebc-7d6f092a4417', 'expected_prev_hash': 'b205bf301b5fd705b52e3d322e78b7e2256c17b4096ce3b3be93721b7814a8f5', 'actual_prev_hash': 'e6b208bf028dae0431b7920259942d7dcd839b62ea5feea2d17ff525ca735f9b'}, {'position': 5, 'event_id': '019d5f9b-b2d6-7ef2-a000-5b48ee523a5b', 'expected_prev_hash': 'ced336f2d21f331a00eb17923d9132cf394b895add516771dd7e499397038b28', 'actual_prev_hash': 'e00fc5556738cc430ae8cc79803a65bebc86c5f771fdc700257cf13fd0e42aee'}, {'position': 6, 'event_id': '019d5f9b-b280-7411-ae38-44b934c59f72', 'expected_prev_hash': 'e6b208bf028dae0431b7920259942d7dcd839b62ea5feea2d17ff525ca735f9b', 'actual_prev_hash': 'fe73e4455bb0d39f5544dc7a946cad7b1859d20f2fd080584920223793dd7f12'}, {'position': 7, 'event_id': '019d5f9b-924c-7fb2-92d5-022d974415a1', 'expected_prev_hash': 'e00fc5556738cc430ae8cc79803a65bebc86c5f771fdc700257cf13fd0e42aee', 'actual_prev_hash': '4d43c61b73e8fcd6ee0d6809902d2754fd3270d9b7af02ca9fe05c48ddd3adc0'}, {'position': 8, 'event_id': '019d5f9b-7228-7273-8afe-4c3f2ad65ae7', 'expected_prev_hash': 'fe73e4455bb0d39f5544dc7a946cad7b1859d20f2fd080584920223793dd7f12', 'actual_prev_hash': '6d5cf0a710359aeea92afb0a8d6c5db93b0c2e5a836caf2b2c665d0c65d8ea6a'}, {'position': 9, 'event_id': '019d5f9b-71fe-7602-916b-1ded97b723c6', 'expected_prev_hash': '4d43c61b73e8fcd6ee0d6809902d2754fd3270d9b7af02ca9fe05c48ddd3adc0', 'actual_prev_hash': '4d3cc6f6bba531847a989106d8c33f1bbf9a47974a9dadc95abaa76fe870219a'}]
+    Checked  : 15 events
+    Violations: [{'position': 0, 'event_id': '019d7ebc-7a81-7f41-98c8-b8de151ac805', 'expected_prev_hash': '4d3cc6f6bba531847a989106d8c33f1bbf9a47974a9dadc95abaa76fe870219a', 'actual_prev_hash': '4c2e466325e813f16d551155c9a813531dd2ff3d537b750b0b389883a1917d0c'}, {'position': 1, 'event_id': '019d7ebc-7a46-7513-82ff-3ae51e9982e7', 'expected_prev_hash': '9bebfc8f9f9f379d2195d3bd67ab10308d215515a5f44cac1aad53506baf90c8', 'actual_prev_hash': 'b3a7f49864051dcc7839de766e39965efde37ffab61751ded4d066bde53a0c13'}, {'position': 2, 'event_id': '019d7ebc-5a61-7531-a8c0-27bd7fdcefde', 'expected_prev_hash': '4c2e466325e813f16d551155c9a813531dd2ff3d537b750b0b389883a1917d0c', 'actual_prev_hash': '0c13e0298a0ba30f9a4ea33c36c5bc341d0117b4c771a37c3e5d16fe2d12139c'}, {'position': 3, 'event_id': '019d7ebc-2ee8-7461-ae1f-adf1a8b8c682', 'expected_prev_hash': 'b3a7f49864051dcc7839de766e39965efde37ffab61751ded4d066bde53a0c13', 'actual_prev_hash': 'c1221028a6bad20cb8aecea3c376351c21e79d83a6beb962f85ea5b8d11e890c'}, {'position': 4, 'event_id': '019d7ebc-2ece-70e2-806b-ba0614f4211e', 'expected_prev_hash': '0c13e0298a0ba30f9a4ea33c36c5bc341d0117b4c771a37c3e5d16fe2d12139c', 'actual_prev_hash': 'ef30ae378ce25e6a82beed7345c2f386ea80d0260589b24b1d2a82e6fd44d918'}, {'position': 5, 'event_id': '019d7ebb-a9a6-7ed2-b0c9-4248a13babb0', 'expected_prev_hash': 'c1221028a6bad20cb8aecea3c376351c21e79d83a6beb962f85ea5b8d11e890c', 'actual_prev_hash': '75ac44cf20e8e1136356b5326c591aa8e99b06c0d37b5337c1827289bbb1de1f'}, {'position': 6, 'event_id': '019d7ebb-a95b-7ee0-858a-1d083b3aba6a', 'expected_prev_hash': 'ef30ae378ce25e6a82beed7345c2f386ea80d0260589b24b1d2a82e6fd44d918', 'actual_prev_hash': '5b3aa339e9203e12a0b91f99545ba65299af1a3e5dfaf8558d4d0cbdcbc5239a'}, {'position': 7, 'event_id': '019d7ebb-8946-7421-8462-5807f12105c3', 'expected_prev_hash': '75ac44cf20e8e1136356b5326c591aa8e99b06c0d37b5337c1827289bbb1de1f', 'actual_prev_hash': '53790549b0165e8db94b88a3f7da73ff2c599b25f23fc994b9dbbb702b72f135'}, {'position': 8, 'event_id': '019d7ebb-6935-78c2-8038-30f1327e69e7', 'expected_prev_hash': '5b3aa339e9203e12a0b91f99545ba65299af1a3e5dfaf8558d4d0cbdcbc5239a', 'actual_prev_hash': '1bfe2d518a988df45af7615958e032f5887b7ec05a3f5317ec9e50900838f186'}, {'position': 9, 'event_id': '019d7ebb-6923-7bb0-ae8d-168a3646f25d', 'expected_prev_hash': '53790549b0165e8db94b88a3f7da73ff2c599b25f23fc994b9dbbb702b72f135', 'actual_prev_hash': '260c2b7b11c14efb72bdc45586fd3e77422fc0e242c0fcf2d333b4331882c5d1'}, {'position': 10, 'event_id': '019d7eb9-a717-76c2-91d5-5fc202c8ac65', 'expected_prev_hash': '1bfe2d518a988df45af7615958e032f5887b7ec05a3f5317ec9e50900838f186', 'actual_prev_hash': '9f2813b9f55915251132614e590443fbc1368c3666e2222a9c352cb09985e5f1'}, {'position': 11, 'event_id': '019d7eb9-a6cd-7391-8a7c-fb1386285922', 'expected_prev_hash': '260c2b7b11c14efb72bdc45586fd3e77422fc0e242c0fcf2d333b4331882c5d1', 'actual_prev_hash': 'a1de308c82a982a4a3620b2564fc6b7d35f7cc5a77e2901092c161b87b8ed620'}, {'position': 12, 'event_id': '019d7eb9-86dc-7071-b41a-0ebd330a5d5b', 'expected_prev_hash': '9f2813b9f55915251132614e590443fbc1368c3666e2222a9c352cb09985e5f1', 'actual_prev_hash': '1d1f4ad71e2c4c528040aee2148c293e967e3a2857c087a5947c8a3d36227980'}, {'position': 13, 'event_id': '019d7eb9-66b2-7ed3-aa16-73fec4df2afb', 'expected_prev_hash': 'a1de308c82a982a4a3620b2564fc6b7d35f7cc5a77e2901092c161b87b8ed620', 'actual_prev_hash': '484044b2c068058a83d1484d8b6f21ce4e377a9800a830602cb162663166d223'}, {'position': 14, 'event_id': '019d7eb9-669b-72f0-bb58-8fec7be28954', 'expected_prev_hash': '1d1f4ad71e2c4c528040aee2148c293e967e3a2857c087a5947c8a3d36227980', 'actual_prev_hash': '4d3cc6f6bba531847a989106d8c33f1bbf9a47974a9dadc95abaa76fe870219a'}]
 
-[8] Compliance reports
+[14] Compliance reports
 
   SOC 2 Type II — CC6
-    Total actions  : 10
-    Allowed        : 4
-    Blocked        : 6  (60.0%)
-    Escalated      : 4  (40.0%)
+    Total actions  : 15
+    Allowed        : 6
+    Blocked        : 9  (60.0%)
+    Escalated      : 6  (40.0%)
     Human approvals: 0   rejections: 0
     Chain integrity: ✗
     All agent actions were evaluated against a versioned declarative policy prior to execution. An append-only, hash-chained audit log was maintained for every action. High-risk actions were routed to a named human approver before execution. Audit chain integrity: VIOLATIONS DETECTED
 
   GDPR Article 30
-    Data access events : 2
-    Agents with access : ['019d5fa0-166f-7d30-9366-c999a6d923be', '019d5ee3-eb5b-79c0-8aaf-b7f6c9162e37']
+    Data access events : 3
+    Agents with access : ['019d7ebc-2da9-7812-a7bf-f5e5bcc7f32e', '019d7eb9-6557-7701-8137-a5993365b00e', '019d7ebb-67f0-7322-b5ce-251f96840432']
 
   PCI-DSS Requirement 10
-    Payment actions    : 6
-    Allowed            : 2
-    Blocked            : 4
+    Payment actions    : 9
+    Allowed            : 3
+    Blocked            : 6
     Human approved     : 0
     All payment-related agent actions were intercepted, policy-evaluated, and logged prior to execution. Actions exceeding the approved threshold were held for named human approval before proceeding. No payment action bypassed the Sentinel gateway.
 
@@ -178,9 +201,12 @@ Agent ID: 019d5fa0-166f-7d30-9366-c999a6d923be
   Interactive API docs: http://localhost:4587/docs
 ```
 
+#### Integration
+
+Currently, this proof-of-concept only contains the backend implementation. TypeScript and Python SDKs are planned for the next iteration to simplify integration. If you prefer to use the APIs directly, you can find an example agent policy template [here](https://github.com/aybruhm/sentinel/blob/main/api/resources/policies/agent_policy_template.json) and the e2e code [here](https://github.com/aybruhm/sentinel/blob/main/api/tests/manual/e2e_demo.py).
+
 ## Next Steps
 
-- [ ] Custom agent policies
 - [ ] SDK implementation
     - [ ] Python - PYPI release
     - [ ] Typescript - NPM release
