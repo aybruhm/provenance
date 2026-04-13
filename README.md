@@ -84,8 +84,10 @@ If you prefer not to authenticate with `dhi.io`, you can update the image refere
 To authenticate:
 
 ```bash
-<docker_PAT> | docker login dhi.io -u <username> --password-stdin
+docker login -u <username> --password-stdin
 ```
+
+Enter your PAT (Personal Access Token) when prompted for a password.
 
 ```bash
 make run
