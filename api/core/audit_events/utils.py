@@ -3,7 +3,7 @@ import json
 from typing import Any, Dict
 
 # Initialize constants
-GENESIS_HASH = hashlib.sha256(b"SENTINEL:GENESIS").hexdigest()
+GENESIS_HASH = hashlib.sha256(b"PROVENANCE:GENESIS").hexdigest()
 
 
 def hash_payload(payload: Dict[str, Any]) -> str:

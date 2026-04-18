@@ -366,11 +366,11 @@ async def main() -> None:
         async with aiohttp.ClientSession() as ping:
             await ping.get(f"{BASE}/health", timeout=TIMOUT)
     except Exception:
-        print(f"{RED}Sentinel gateway not reachable at {BASE}{RESET}")
+        print(f"{RED}Provenance gateway not reachable at {BASE}{RESET}")
         print("Start it first:  uvicorn main:app --reload --port 8000")
         sys.exit(1)
 
-    header("SENTINEL  —  Agentic Audit & Compliance Layer  (POC Demo)")
+    header("PROVENANCE  —  Agentic Audit & Compliance Layer  (POC Demo)")
     step(0, f"Agent session running on: {DIM}{SESSION}{RESET}")
 
     # Auth flow
@@ -613,7 +613,7 @@ async def main() -> None:
         print(f"    {DIM}{pci['attestation']}{RESET}")
 
     header("POC COMPLETE")
-    print(f"  {GREEN}All Sentinel flows exercised successfully.{RESET}\n")
+    print(f"  {GREEN}All Provenance flows exercised successfully.{RESET}\n")
     print(f"  Interactive API docs: {CYAN}http://localhost:4587/docs{RESET}\n")
 
 

@@ -1,5 +1,5 @@
 [project]
-name = "sentinel"
+name = "provenance"
 version = "0.1.0"
 description = "Agentic Audit & Compliance Layer (SOC2 for AI agents)"
 readme = "README.md"

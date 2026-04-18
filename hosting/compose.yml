@@ -1,10 +1,10 @@
 services:
     api:
-        image: sentinel_api:latest
+        image: provenance_api:latest
         build:
             context: ../api
             dockerfile: docker/dev.Dockerfile
-        container_name: sentinel_api
+        container_name: provenance_api
         ports:
             - "4587:8001"
         environment:
@@ -48,31 +48,31 @@ services:
 
     db:
         image: postgres:16-alpine
-        container_name: sentinel_dev
+        container_name: provenance_dev
         ports:
             - "5433:5432"
         environment:
             - POSTGRES_USER=${POSTGRES_USER:-abc}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-qwerty}
-            - POSTGRES_DB=${POSTGRES_DB:-sentinel_db}
+            - POSTGRES_DB=${POSTGRES_DB:-provenance_db}
         env_file:
             - ../api/.env
         volumes:
-            - sentinel_db_data:/var/lib/postgresql/data
+            - provenance_db_data:/var/lib/postgresql/data
             - ./scripts/initialize_db.sh:/docker-entrypoint-initdb.d/initialize_db.sh:ro
         healthcheck:
             test:
                 [
                     "CMD-SHELL",
-                    "pg_isready -U ${POSTGRES_USER:-abc} -d ${POSTGRES_DB:-sentinel_db} -h localhost -p 5432",
+                    "pg_isready -U ${POSTGRES_USER:-abc} -d ${POSTGRES_DB:-provenance_db} -h localhost -p 5432",
                 ]
             interval: 10s
             timeout: 5s
             retries: 5
 
 volumes:
-    sentinel_db_data:
+    provenance_db_data:
 
 networks:
     default:
-        name: sentinel_network
+        name: provenance_network

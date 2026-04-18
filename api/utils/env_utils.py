@@ -6,7 +6,7 @@ from pydantic import BaseModel
 class EnvSettings(BaseModel):
     # Infrastructure Settings
     DATABASE_URL: str = os.getenv(
-        "DATABASE_URL", "postgresql+asyncpg://abc:qwerty@db:5432/sentinel_db"
+        "DATABASE_URL", "postgresql+asyncpg://abc:qwerty@db:5432/provenance_db"
     )
 
     # Application Settings

@@ -250,6 +250,6 @@ class ComplianceReportService:
                 "All payment-related agent actions were intercepted, policy-evaluated, "
                 "and logged prior to execution. Actions exceeding the approved threshold "
                 "were held for named human approval before proceeding. "
-                "No payment action bypassed the Sentinel gateway."
+                "No payment action bypassed the Provenance gateway."
             ),
         )

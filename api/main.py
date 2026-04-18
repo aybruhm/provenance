@@ -40,8 +40,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Sentinel API",
-    description="API for Sentinel, the Agentic Audit & Compliance Layer for AI agent deployments.",
+    title="Provenance API",
+    description="API for Provenance, the Agentic Audit & Compliance Layer for AI agent deployments.",
     version="0.1.0",
     lifespan=lifespan,
     root_path="/api",

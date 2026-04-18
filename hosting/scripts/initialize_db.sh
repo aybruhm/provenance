@@ -3,7 +3,7 @@ set -e
 
 DB_USER="${POSTGRES_USER:-abc}"
 DB_PASSWORD="${POSTGRES_PASSWORD:-qwerty}"
-DB_NAME="${POSTGRES_DB:-sentinel_db}"
+DB_NAME="${POSTGRES_DB:-provenance_db}"
 
 echo "Checking if database '${DB_NAME}' exists..."
 
