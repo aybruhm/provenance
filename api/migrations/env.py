@@ -7,6 +7,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 import dbs.postgres.agents.dbes  # noqa: F401
+import dbs.postgres.api_keys.dbes  # noqa: F401
 import dbs.postgres.audit_events.dbes  # noqa: F401
 import dbs.postgres.escalations.dbes  # noqa: F401
 import dbs.postgres.policy.dbes  # noqa: F401
