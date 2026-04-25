@@ -19,6 +19,7 @@ class APIKeyService:
             id=str(dbe.id),
             prefix=dbe.prefix,  # type: ignore
             key_hash=dbe.key_hash,  # type: ignore
+            scope=str(dbe.scope),  # type: ignore
             created_by=CreatedBy(
                 id=str(dbe.user.id),
                 username=dbe.user.username,

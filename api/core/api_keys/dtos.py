@@ -21,6 +21,7 @@ class APIKeyDTO(BaseModel):
     id: str
     prefix: str
     key_hash: str
+    scope: str
     created_by: CreatedBy
     created_at: str
     updated_at: str
