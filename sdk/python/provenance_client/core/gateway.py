@@ -27,7 +27,7 @@ class ProvenanceGateway(ProvenanceGatewayProtocol):
     def __repr__(self) -> str:
         return (
             f"ProvenanceGateway(cl={self._client.gateway_url!r}, "
-            f"tenant={self._client.tenant_id!r}, agent={self._client.agent_id!r}, tenant_policy_id={self._client.tenant_policy_id!r})"
+            f"agent={self._client.agent_id!r})"
         )
 
     def execute(

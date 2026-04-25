@@ -40,31 +40,28 @@ class ProvenanceClient:
         self,
         *,
         gateway_url: str,
-        tenant_id: str,
         agent_id: str,
-        tenant_policy_id: str,
         on_gateway_error: str = "closed",
         default_session: str | None = None,
         timeout: float = 90.0,
+        api_key: str | None = None,
     ) -> None:
         """
         Args:
             gateway_url (str):        base URL of the Provenance gateway  (e.g. "http://localhost:8000")
-            tenant_id (str):          your tenant identifier
             agent_id (str):           the agent identity making tool calls
-            tenant_policy_id (str):   the tenant policy identifier
             on_gateway_error (str):   "closed" | "open"  — how to handle gateway unavailability
             default_session (str | None): shared session_id for all calls; auto-generated if omitted
             timeout (float):          HTTP request timeout in seconds (escalations need a high value)
+            api_key (str | None):     API key for authentication; sent as an X-PROVENANCE-API-KEY header on every request
         """
 
         self.gateway_url = gateway_url.rstrip("/")
-        self.tenant_id = tenant_id
         self.agent_id = agent_id
-        self.tenant_policy_id = tenant_policy_id
         self.on_gateway_error = on_gateway_error
         self.default_session = default_session or f"sess_{uuid.uuid4().hex[:16]}"
         self.timeout = timeout
+        self.api_key = api_key
 
         # Reusable sync/async HTTP clients (lazy-init)
         self._sync_client: httpx.Client | None = None
@@ -76,12 +73,19 @@ class ProvenanceClient:
 
     # ── HTTP clients ──────────────────────────────────────────────────────────
 
+    def _auth_headers(self) -> dict[str, str]:
+        if self.api_key:
+            return {"X-PROVENANCE-API-KEY": f"{self.api_key}"}
+        return {}
+
     def _http(self) -> httpx.Client:
         with self._sync_client_lock:
             if self._sync_client is None or self._sync_client.is_closed:
                 self._sync_client = httpx.Client(
                     base_url=self.gateway_url,
+                    headers=self._auth_headers(),
                     timeout=self.timeout,
+                    trust_env=False,
                 )
             return self._sync_client
 
@@ -90,7 +94,9 @@ class ProvenanceClient:
             if self._async_client is None or self._async_client.is_closed:
                 self._async_client = httpx.AsyncClient(
                     base_url=self.gateway_url,
+                    headers=self._auth_headers(),
                     timeout=self.timeout,
+                    trust_env=False,
                 )
             return self._async_client
 
@@ -114,9 +120,7 @@ class ProvenanceClient:
         return dict(
             session_id=session_id,
             agent_id=self.agent_id,
-            tenant_id=self.tenant_id,
             action=action,
-            tenant_policy_id=self.tenant_policy_id,
             decision=decision or Decision.BLOCK,
             parameters=parameters,
         )
