@@ -6,7 +6,6 @@ from pydantic import BaseModel
 class CreateAuditEventDTO(BaseModel):
     session_id: str
     agent_id: str
-    tenant_id: str
     action: str
     # NOTE: tenant_policy_id is optional
     # On sdk requests, it'll automatically be set.

@@ -24,19 +24,27 @@ class PolicyService:
             rules={"rules": [rule.model_dump() for rule in dto.rules]},
         )
 
-    def _map_dbe_to_dto(self, dbe: PolicyDBE) -> PolicyDTO:
+    def _map_dbe_to_dto(
+        self,
+        dbe: PolicyDBE,
+        tenant_id: UUID | None = None,
+    ) -> PolicyDTO:
         return PolicyDTO(
             id=str(dbe.id),
             name=dbe.name,  # type: ignore
             version=dbe.version,  # type: ignore
             description=dbe.description,  # type: ignore
             rules=dbe.rules.get("rules", []),
+            tenant_id=str(tenant_id),
             created_at=dbe.created_at.isoformat(),  # type: ignore
             updated_at=dbe.updated_at.isoformat(),  # type: ignore
         )
 
     def _map_tenant_policy_dbe_to_dto(self, dbe: TenantPolicyDBE) -> PolicyDTO:
-        return self._map_dbe_to_dto(dbe=dbe.policy)
+        return self._map_dbe_to_dto(
+            dbe=dbe.policy,
+            tenant_id=dbe.tenant_id,  # type: ignore
+        )
 
     async def create_policy(self, create_dto: CreatePolicyDTO) -> PolicyDTO:
         dbe = self._map_dto_to_dbe(create_dto)
