@@ -284,7 +284,6 @@ async def create_api_key(
 async def execute(
     client: aiohttp.ClientSession,
     agent_id: str,
-    tenant_id: str,
     tenant_policy_id: str,
     action: str,
     decision: str,
@@ -295,7 +294,6 @@ async def execute(
         json=dict(
             session_id=SESSION,
             agent_id=agent_id,
-            tenant_id=tenant_id,
             tenant_policy_id=tenant_policy_id,
             action=action,
             decision=decision,
@@ -513,7 +511,6 @@ async def main() -> None:
         r = await execute(
             client,
             agent_id,
-            tenant_id,
             tenant_policy_id,
             "payments.initiate",
             Decision.ALLOW,
@@ -529,7 +526,6 @@ async def main() -> None:
             holder["large"] = await execute(
                 client,
                 agent_id,
-                tenant_id,
                 tenant_policy_id,
                 "payments.initiate",
                 Decision.ESCALATE,
@@ -559,7 +555,6 @@ async def main() -> None:
             holder["jpy"] = await execute(
                 client,
                 agent_id,
-                tenant_id,
                 tenant_policy_id,
                 "payments.initiate",
                 Decision.ESCALATE,
@@ -587,7 +582,6 @@ async def main() -> None:
         r = await execute(
             client,
             agent_id,
-            tenant_id,
             tenant_policy_id,
             "data.delete",
             Decision.BLOCK,
@@ -600,7 +594,6 @@ async def main() -> None:
         r = await execute(
             client,
             agent_id,
-            tenant_id,
             tenant_policy_id,
             "email.send",
             Decision.ALLOW,
