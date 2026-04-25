@@ -14,7 +14,7 @@ def hash_api_key(api_key: str) -> str:
     return hashlib.sha256(api_key.encode()).hexdigest()
 
 
-def generate_api_key(env: str = "live") -> tuple[str, str]:
+def generate_api_key(env: str = "live") -> tuple[str, str, str]:
     """
     Generate a new API key.
 
@@ -26,7 +26,7 @@ def generate_api_key(env: str = "live") -> tuple[str, str]:
     full_key = f"pk_{env}_{key_body}"
     prefix = f"pk_{env}_{key_body[:8]}"
     key_hash = hash_api_key(api_key=full_key)
-    return prefix, key_hash
+    return full_key, prefix, key_hash
 
 
 def verify_api_key(incoming_key: str, stored_hash: str) -> bool:

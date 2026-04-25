@@ -30,19 +30,16 @@ class APIKeyService:
     async def _map_dto_to_dbe(self, dto: CreateAPIKeyDTO) -> APIKeyDBE:
         return APIKeyDBE(created_by=dto.user_id, scope=dto.scope_id)
 
-    async def create(self, create_dto: CreateAPIKeyDTO) -> APIKeyDTO:
-        # Generate API key prefix/key_hash
-        prefix, key_hash = generate_api_key()
+    async def create(self, create_dto: CreateAPIKeyDTO) -> str:
+        # Generate API key (full_key, prefix, key_hash)
+        full_key, prefix, key_hash = generate_api_key()
 
         # Map DTO to DBE and set prefix/key_hash
         dbe = await self._map_dto_to_dbe(dto=create_dto)
         dbe.prefix = prefix  # type: ignore
         dbe.key_hash = key_hash  # type: ignore
 
-        # Add to database and return DTO
-        api_key_dbe = await self.api_key_dao.create(api_key=dbe)
-        api_key_dto = self._map_dbe_to_dto(dbe=api_key_dbe)
-        return api_key_dto
+        return full_key
 
     async def list(self, tenant_id: UUID, offset: int, limit: int) -> list[APIKeyDTO]:
         api_key_dbes = await self.api_key_dao.list(
