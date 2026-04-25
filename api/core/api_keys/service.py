@@ -40,6 +40,8 @@ class APIKeyService:
         dbe.prefix = prefix  # type: ignore
         dbe.key_hash = key_hash  # type: ignore
 
+        # Save to database
+        await self.api_key_dao.create(api_key=dbe)
         return full_key
 
     async def list(self, tenant_id: UUID, offset: int, limit: int) -> list[APIKeyDTO]:
