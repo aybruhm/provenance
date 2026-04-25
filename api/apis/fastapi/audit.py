@@ -7,7 +7,7 @@ from apis.fastapi.dtos import (
     AuditEventResponseDTO,
 )
 from core.audit_events.service import AuditEventService
-from services.dependencies import get_current_user
+from services.dependencies import get_authenticated
 
 
 class AuditAPIRouter:
@@ -16,7 +16,7 @@ class AuditAPIRouter:
 
         # Initialize api router
         self.router = APIRouter(
-            dependencies=[Depends(get_current_user)],
+            dependencies=[Depends(get_authenticated)],
         )
 
         # Register routes

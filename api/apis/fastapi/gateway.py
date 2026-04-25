@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Request
 
 from apis.fastapi.dtos import (
+    Decision,
     EscalationCreateRequestDTO,
     ExecuteRequestDTO,
     ExecuteResponseDTO,
@@ -13,7 +14,7 @@ from core.escalations.manager import EscalationManager
 from core.escalations.service import EscalationService
 from core.policy.engine import PolicyEngine
 from core.tenants.service import TenantService
-from services.dependencies import get_current_user
+from services.dependencies import get_authenticated
 from utils.logger_utils import logger
 
 
@@ -34,7 +35,7 @@ class ExecutionGatewayAPIRouter:
 
         # Initialize api router
         self.router = APIRouter(
-            dependencies=[Depends(get_current_user)],
+            dependencies=[Depends(get_authenticated)],
         )
 
         # Register routes
@@ -63,8 +64,26 @@ class ExecutionGatewayAPIRouter:
         )
         if not tenant:
             return ExecuteResponseDTO(
-                decision="BLOCK",  # type: ignore
+                decision=Decision.BLOCK,  # type: ignore
                 reason="Tenant not found",
+            )
+
+        scope = getattr(request.state, "scope", None)
+        if scope and not execute_request.tenant_policy_id:
+            # On sdk requests, set automatically.
+            execute_request.tenant_policy_id = str(scope)
+
+        if not scope and not execute_request.tenant_policy_id:
+            # On api requests, tenant_policy_id is required.
+            return ExecuteResponseDTO(
+                decision=Decision.BLOCK,  # type: ignore
+                reason="tenant_policy_id is required",
+            )
+
+        if not execute_request.tenant_policy_id:
+            return ExecuteResponseDTO(
+                decision=Decision.BLOCK,  # type: ignore
+                reason="tenant_policy_id is required",
             )
 
         policy = await self.policy_engine.load_policy(

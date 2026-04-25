@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from apis.fastapi.dtos import ReportResponseDTO
 from core.reports.service import ComplianceReportService
-from services.dependencies import get_current_user
+from services.dependencies import get_authenticated
 
 
 class ReportsAPIRouter:
@@ -11,7 +11,7 @@ class ReportsAPIRouter:
 
         # Initialize api router
         self.router = APIRouter(
-            dependencies=[Depends(get_current_user)],
+            dependencies=[Depends(get_authenticated)],
         )
 
         # Register routes
