@@ -16,7 +16,7 @@ from apis.fastapi.dtos import (
     UserWithCredentialsResponse,
 )
 from core.users.auth import AuthService
-from middlewares.jwt_bearer import JWTCookie
+from middlewares.jwt_cookie_auth import JWTCookieAuth
 from services.dependencies import get_current_user
 from services.exceptions import BadRequestException, UnauthorizedException
 from utils.jwt_utils import (
@@ -30,10 +30,9 @@ from utils.jwt_utils import (
 class UsersAuthAPIRouter:
     def __init__(
         self,
-        jwt_cookie: JWTCookie,
         auth_service: AuthService,
     ):
-        self.jwt_cookie = jwt_cookie
+        self.jwt_cookie = JWTCookieAuth()
         self.auth_service = auth_service
         self.users_service = auth_service.user_service
 

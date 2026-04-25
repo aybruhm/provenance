@@ -1,6 +1,6 @@
 from fastapi import Depends, Request
-from middlewares.jwt_bearer import JWTCookie
 
+from middlewares.jwt_cookie_auth import JWTCookieAuth
 from services.dependencies.types import CurrentUserContext
 from services.exceptions import UnauthorizedException
 
@@ -13,7 +13,7 @@ class AuthDependencies:
     @staticmethod
     def get_current_user(
         request: Request,
-        token: str = Depends(JWTCookie()),
+        token: str = Depends(JWTCookieAuth()),
     ) -> CurrentUserContext:
         """
         Get the current authenticated user from the request.
@@ -23,7 +23,7 @@ class AuthDependencies:
         username = getattr(request.state, "username", None)
 
         if not user_id or not username:
-            raise UnauthorizedException(detail="User information not available")
+            raise UnauthorizedException(detail="User not authenticated")
 
         user_context = CurrentUserContext(
             id=user_id,

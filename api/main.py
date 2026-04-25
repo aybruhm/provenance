@@ -29,7 +29,6 @@ from dbs.postgres.policy.dao import PolicyDAO
 from dbs.postgres.tenant_policies.dao import TenantPolicyDAO
 from dbs.postgres.tenants.dao import TenantDAO
 from dbs.postgres.users.dao import UserDAO
-from middlewares.jwt_bearer import JWTCookie
 
 
 @asynccontextmanager
@@ -56,9 +55,6 @@ app.add_middleware(
 
 # Initialize v1 router
 api_v1_router = APIRouter(prefix="/v1")
-
-# Initialize custom middlewares
-jwt_cookie = JWTCookie()
 
 # Initialize DAOs
 audit_event_dao = AuditEventDAO()
@@ -113,10 +109,7 @@ policy_router = PolicyAPIRouter(policy_service=policy_service)
 reports_router = ReportsAPIRouter(
     report_service=report_service,
 )
-users_auth_router = UsersAuthAPIRouter(
-    jwt_cookie=jwt_cookie,
-    auth_service=auth_service,
-)
+users_auth_router = UsersAuthAPIRouter(auth_service=auth_service)
 tenant_router = TenantAPIRouter(
     tenant_service=tenant_service,
 )
