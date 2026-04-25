@@ -1,9 +1,14 @@
 from fastapi import Depends, Request
 
-from middlewares.apikey_auth import APIKeyAuth
+from middlewares.apikey_auth import _API_KEY_HEADER_NAME, APIKeyAuth
 from middlewares.jwt_cookie_auth import JWTCookieAuth
 from services.dependencies.types import CurrentScopeContext, CurrentUserContext
 from services.exceptions import UnauthorizedException
+
+# Module-level singletons with auto_error=False so they return None
+# instead of raising when the credential is simply absent
+_jwt_auth = JWTCookieAuth(auto_error=False)
+_apikey_auth = APIKeyAuth(auto_error=False)
 
 
 class AuthDependencies:
@@ -14,7 +19,7 @@ class AuthDependencies:
     @staticmethod
     def get_current_user(
         request: Request,
-        token: str = Depends(JWTCookieAuth()),
+        token: str = Depends(_jwt_auth),
     ) -> CurrentUserContext:
         """
         Get the current authenticated user from the request.
@@ -36,7 +41,7 @@ class AuthDependencies:
     @staticmethod
     def get_current_scope_from_apikey(
         request: Request,
-        token: str = Depends(APIKeyAuth()),
+        token: str = Depends(_apikey_auth),
     ) -> CurrentScopeContext:
         """
         Get the current authenticated user from the request using API key authentication.
@@ -58,3 +63,21 @@ class AuthDependencies:
             scope=scope,
         )
         return scope_context
+
+    @staticmethod
+    async def get_authenticated(request: Request) -> None:
+        """
+        Accepts either an API key (X-PROVENANCE-API-KEY header)
+        or a JWT session cookie (access_token). API key takes precedence.
+        """
+
+        if request.headers.get(_API_KEY_HEADER_NAME.lower()):
+            await _apikey_auth(request)
+
+        elif request.cookies.get("access_token"):
+            await _jwt_auth(request)
+
+        else:
+            raise UnauthorizedException(
+                detail="Authentication required. Provide an API key or a valid session token."
+            )
