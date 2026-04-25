@@ -32,7 +32,7 @@ class TenantPolicyDBE(IDMixin, TimestampMixin):
     tenant = relationship("TenantDBE", backref="tenant_policies")
     policy = relationship("PolicyDBE", backref="tenant_policies")
     api_keys = relationship(
-        "ApiKeyDBE",
+        "APIKeyDBE",
         back_populates="tenant_policy",
         cascade="all, delete-orphan",
     )

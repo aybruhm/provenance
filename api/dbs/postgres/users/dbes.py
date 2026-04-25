@@ -10,5 +10,5 @@ class UserDBE(IDMixin, TimestampMixin):
     username = Column(String)
     password = Column(String)
 
-    api_keys = relationship("ApiKeyDBE", back_populates="user")
+    api_keys = relationship("APIKeyDBE", back_populates="user")
     
