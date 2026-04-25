@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from core.agents.dtos import CreateAgentDTO, UpdateAgentDTO
+from core.api_keys.dtos import CreateAPIKeyDTO, UpdateAPIKeyScopeDTO
 from core.audit_events.dtos import CreateAuditEventDTO
 from core.escalations.dtos import CreateEscalationDTO
 from core.policy.dtos import CreatePolicyDTO, UpdatePolicyDTO
@@ -68,6 +69,17 @@ class EscalationDecisionRequestDTO(BaseModel):
 
 
 class EscalationCreateRequestDTO(CreateEscalationDTO):
+    pass
+
+
+# ------ API Keys ----------
+
+
+class APIKeyCreateRequestDTO(CreateAPIKeyDTO):
+    pass
+
+
+class APIKeyUpdateScopeRequestDTO(UpdateAPIKeyScopeDTO):
     pass
 
 
