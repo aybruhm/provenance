@@ -45,7 +45,7 @@ jobs:
                   if [ "${ACT}" = "true" ]; then
                     echo "Skipping push — running locally in act"
                   else
-                    git push --follow-tags
+                    git push origin HEAD "v${{ github.event.inputs.version }}"
                   fi
 
     build:
