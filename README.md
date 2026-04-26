@@ -43,6 +43,35 @@ Agent  →  Provenance Gateway  →  Policy Engine  →  ALLOW / BLOCK / ESCALAT
 
 **Stack:** Python 3.13 · FastAPI · PostgreSQL · SQLAlchemy (async) · Alembic · Docker
 
+## Python SDK
+
+The `provenance-client` package is available on PyPI. Install it to integrate Provenance policy gating into your Python agents:
+
+```bash
+pip install provenance-client
+# or with uv
+uv add provenance-client
+```
+
+**Requires Python 3.13+** · [SDK documentation](sdk/python/provenance_client/README.md) · [Examples](sdk/python/examples/)
+
+```python
+from provenance_client import ProvenanceClient, ProvenanceGateway, Decision
+
+gateway = ProvenanceGateway(
+    ProvenanceClient(
+        gateway_url="http://localhost:4587",
+        agent_id="<your-agent-id>",
+        api_key="pk_live_...",
+    )
+)
+
+result = gateway.execute("payments.initiate", {"amount": 50, "currency": "GBP"}, decision=Decision.ALLOW)
+print(result.decision)  # Decision.ALLOW
+```
+
+---
+
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) and Docker Compose
@@ -112,33 +141,35 @@ Expected Output
 ────────────────────────────────────────────────────────────────
   PROVENANCE  —  Agentic Audit & Compliance Layer  (POC Demo)
 ────────────────────────────────────────────────────────────────
-[0] Agent session running on: sess_335c3e5ecaf5
+[0] Agent session running on: sess_7607d711c862
 
-[1] Authenticated as [u:abc]...
+[1] Authenticated as [u:abc]
 
-[2] Tenant ID: 019d7e9c-f44b-7472-92a3-785f40fdc150
+[2] Tenant ID: 019dca7d-f002-7d92-86c4-93a066a2c6f6
 
-[3] Agent ID: 019d7ebc-2da9-7812-a7bf-f5e5bcc7f32e
+[3] Agent ID: 019dca7f-e9b9-78c0-a098-bb87e5c60d6c
 
-[4] Policy ID: 019d7ebc-2dfa-7700-88fd-ec8e90364579
+[4] Policy ID: 019dca7f-ea12-7342-953c-4263b8748706
 
-[5] Tenant Policy ID: 019d7ebc-2e68-7fb2-b3d6-333a03e769d0
+[5] Tenant Policy ID: 019dca7f-ea83-7221-8265-761417491a77
 
-[6] Small payment: £50 GBP  →  expect ALLOW
+[6] API Key: pk_live__3CxwsHps
+
+[7] Small payment: £50 GBP  →  expect ALLOW
     Decision : ✗ BLOCK
     Reason   : Escalation TIMEOUT — action blocked
 
-[7] Large payment: £800 GBP  →  expect ESCALATE → human APPROVES → ALLOW
+[8] Large payment: £800 GBP  →  expect ESCALATE → human APPROVES → ALLOW
     No pending escalation found!
     Decision : ✔ ALLOW
     Reason   : Payment within approved parameters — amount ≤ £500, currency approve
     Escalation : None
 
-[8] Payment in JPY (disallowed currency)  →  expect ESCALATE → REJECT → BLOCK
+[9] Payment in JPY (disallowed currency)  →  expect ESCALATE → REJECT → BLOCK
     No pending escalation found!
     Decision : ✗ BLOCK
     Reason   : Escalation TIMEOUT — action blocked
-    Escalation : 019d7ebc-5a39-7ea0-b853-ca8cd1295214
+    Escalation : 019dca80-0b81-76a2-b9a2-434891b0cb53
 
 [10] data.delete (bulk)  →  expect BLOCK (hard policy)
     Decision : ✗ BLOCK
@@ -150,45 +181,45 @@ Expected Output
 
 [12] Audit log (hash-chained)
 
-  EVENT ID                      ACTION                          DECISION  PREV HASH
-  ────────────────────────────  ──────────────────────────────  ────────  ────────────────────
-  019d7ebc-7a81-7f41-98c8-b8de  email.send                      ALLOW     4c2e466325e813f16d...
-  019d7ebc-7a46-7513-82ff-3ae5  data.delete                     BLOCK     b3a7f49864051dcc78...
-  019d7ebc-5a61-7531-a8c0-27bd  payments.initiate               BLOCK     0c13e0298a0ba30f9a... 👤
-  019d7ebc-2ee8-7461-ae1f-adf1  payments.initiate               ALLOW     c1221028a6bad20cb8...
-  019d7ebc-2ece-70e2-806b-ba06  payments.initiate               BLOCK     ef30ae378ce25e6a82... 👤
-  019d7ebb-a9a6-7ed2-b0c9-4248  email.send                      ALLOW     75ac44cf20e8e11363...
-  019d7ebb-a95b-7ee0-858a-1d08  data.delete                     BLOCK     5b3aa339e9203e12a0...
-  019d7ebb-8946-7421-8462-5807  payments.initiate               BLOCK     53790549b0165e8db9... 👤
-  019d7ebb-6935-78c2-8038-30f1  payments.initiate               ALLOW     1bfe2d518a988df45a...
-  019d7ebb-6923-7bb0-ae8d-168a  payments.initiate               BLOCK     260c2b7b11c14efb72... 👤
-  019d7eb9-a717-76c2-91d5-5fc2  email.send                      ALLOW     9f2813b9f559152511...
-  019d7eb9-a6cd-7391-8a7c-fb13  data.delete                     BLOCK     a1de308c82a982a4a3...
-  019d7eb9-86dc-7071-b41a-0ebd  payments.initiate               BLOCK     1d1f4ad71e2c4c5280... 👤
-  019d7eb9-66b2-7ed3-aa16-73fe  payments.initiate               ALLOW     484044b2c068058a83...
-  019d7eb9-669b-72f0-bb58-8fec  payments.initiate               BLOCK     4d3cc6f6bba531847a... 👤
+EVENT ID                      ACTION                          DECISION  PREV HASH
+────────────────────────────  ──────────────────────────────  ────────  ────────────────────
+019dca80-2c28-7290-a743-52b5  email.send                      ALLOW     715a8e5c8128a353e9...
+019dca80-2bcb-7fc3-886b-dabb  data.delete                     BLOCK     a0d6c40c09de2b7cd2...
+019dca80-0ba0-7392-af9f-8a79  payments.initiate               BLOCK     d95da25aeff3f41243... 👤
+019dca7f-eb60-7313-8e11-b36a  payments.initiate               ALLOW     45c0be78fb87a3fd70...
+019dca7f-eb31-7a50-8688-8e66  payments.initiate               BLOCK     316fc3526e9bcadefd... 👤
+019dca7e-a518-7690-b7cb-1989  email.send                      ALLOW     9ca039ed587c46912e...
+019dca7e-a4bc-76c2-8068-12ff  data.delete                     BLOCK     d7ccff916cfc8d581e...
+019dca7e-849f-7da3-ad9c-700a  payments.initiate               BLOCK     d24e388435419a46cb... 👤
+019dca7e-644f-7aa1-8ffa-bfe4  payments.initiate               ALLOW     e07b860c8c13c14e6d...
+019dca7e-6428-79c2-92b0-17c8  payments.initiate               BLOCK     96ce36d4aeee5a9ee2... 👤
+019dca7e-3377-7053-b7c2-c255  email.send                      ALLOW     97354cd47dae9a71fa...
+019dca7e-3315-75d3-a903-01e4  data.delete                     BLOCK     291f8ccfcb77e11f06...
+019dca7e-12fe-7ea1-b77f-7e57  payments.initiate               BLOCK     07785b7f497cf20486... 👤
+019dca7d-f2a7-7f01-8314-634b  payments.initiate               ALLOW     15d9c92a6e8d4acfc0...
+019dca7d-f27c-7e31-93d8-e23f  payments.initiate               BLOCK     91e826c6a83999637e... 👤
 
 [13] Hash-chain integrity scan
     Chain    : ✗ COMPROMISED
     Checked  : 15 events
-    Violations: [{'position': 0, 'event_id': '019d7ebc-7a81-7f41-98c8-b8de151ac805', 'expected_prev_hash': '4d3cc6f6bba531847a989106d8c33f1bbf9a47974a9dadc95abaa76fe870219a', 'actual_prev_hash': '4c2e466325e813f16d551155c9a813531dd2ff3d537b750b0b389883a1917d0c'}, {'position': 1, 'event_id': '019d7ebc-7a46-7513-82ff-3ae51e9982e7', 'expected_prev_hash': '9bebfc8f9f9f379d2195d3bd67ab10308d215515a5f44cac1aad53506baf90c8', 'actual_prev_hash': 'b3a7f49864051dcc7839de766e39965efde37ffab61751ded4d066bde53a0c13'}, {'position': 2, 'event_id': '019d7ebc-5a61-7531-a8c0-27bd7fdcefde', 'expected_prev_hash': '4c2e466325e813f16d551155c9a813531dd2ff3d537b750b0b389883a1917d0c', 'actual_prev_hash': '0c13e0298a0ba30f9a4ea33c36c5bc341d0117b4c771a37c3e5d16fe2d12139c'}, {'position': 3, 'event_id': '019d7ebc-2ee8-7461-ae1f-adf1a8b8c682', 'expected_prev_hash': 'b3a7f49864051dcc7839de766e39965efde37ffab61751ded4d066bde53a0c13', 'actual_prev_hash': 'c1221028a6bad20cb8aecea3c376351c21e79d83a6beb962f85ea5b8d11e890c'}, {'position': 4, 'event_id': '019d7ebc-2ece-70e2-806b-ba0614f4211e', 'expected_prev_hash': '0c13e0298a0ba30f9a4ea33c36c5bc341d0117b4c771a37c3e5d16fe2d12139c', 'actual_prev_hash': 'ef30ae378ce25e6a82beed7345c2f386ea80d0260589b24b1d2a82e6fd44d918'}, {'position': 5, 'event_id': '019d7ebb-a9a6-7ed2-b0c9-4248a13babb0', 'expected_prev_hash': 'c1221028a6bad20cb8aecea3c376351c21e79d83a6beb962f85ea5b8d11e890c', 'actual_prev_hash': '75ac44cf20e8e1136356b5326c591aa8e99b06c0d37b5337c1827289bbb1de1f'}, {'position': 6, 'event_id': '019d7ebb-a95b-7ee0-858a-1d083b3aba6a', 'expected_prev_hash': 'ef30ae378ce25e6a82beed7345c2f386ea80d0260589b24b1d2a82e6fd44d918', 'actual_prev_hash': '5b3aa339e9203e12a0b91f99545ba65299af1a3e5dfaf8558d4d0cbdcbc5239a'}, {'position': 7, 'event_id': '019d7ebb-8946-7421-8462-5807f12105c3', 'expected_prev_hash': '75ac44cf20e8e1136356b5326c591aa8e99b06c0d37b5337c1827289bbb1de1f', 'actual_prev_hash': '53790549b0165e8db94b88a3f7da73ff2c599b25f23fc994b9dbbb702b72f135'}, {'position': 8, 'event_id': '019d7ebb-6935-78c2-8038-30f1327e69e7', 'expected_prev_hash': '5b3aa339e9203e12a0b91f99545ba65299af1a3e5dfaf8558d4d0cbdcbc5239a', 'actual_prev_hash': '1bfe2d518a988df45af7615958e032f5887b7ec05a3f5317ec9e50900838f186'}, {'position': 9, 'event_id': '019d7ebb-6923-7bb0-ae8d-168a3646f25d', 'expected_prev_hash': '53790549b0165e8db94b88a3f7da73ff2c599b25f23fc994b9dbbb702b72f135', 'actual_prev_hash': '260c2b7b11c14efb72bdc45586fd3e77422fc0e242c0fcf2d333b4331882c5d1'}, {'position': 10, 'event_id': '019d7eb9-a717-76c2-91d5-5fc202c8ac65', 'expected_prev_hash': '1bfe2d518a988df45af7615958e032f5887b7ec05a3f5317ec9e50900838f186', 'actual_prev_hash': '9f2813b9f55915251132614e590443fbc1368c3666e2222a9c352cb09985e5f1'}, {'position': 11, 'event_id': '019d7eb9-a6cd-7391-8a7c-fb1386285922', 'expected_prev_hash': '260c2b7b11c14efb72bdc45586fd3e77422fc0e242c0fcf2d333b4331882c5d1', 'actual_prev_hash': 'a1de308c82a982a4a3620b2564fc6b7d35f7cc5a77e2901092c161b87b8ed620'}, {'position': 12, 'event_id': '019d7eb9-86dc-7071-b41a-0ebd330a5d5b', 'expected_prev_hash': '9f2813b9f55915251132614e590443fbc1368c3666e2222a9c352cb09985e5f1', 'actual_prev_hash': '1d1f4ad71e2c4c528040aee2148c293e967e3a2857c087a5947c8a3d36227980'}, {'position': 13, 'event_id': '019d7eb9-66b2-7ed3-aa16-73fec4df2afb', 'expected_prev_hash': 'a1de308c82a982a4a3620b2564fc6b7d35f7cc5a77e2901092c161b87b8ed620', 'actual_prev_hash': '484044b2c068058a83d1484d8b6f21ce4e377a9800a830602cb162663166d223'}, {'position': 14, 'event_id': '019d7eb9-669b-72f0-bb58-8fec7be28954', 'expected_prev_hash': '1d1f4ad71e2c4c528040aee2148c293e967e3a2857c087a5947c8a3d36227980', 'actual_prev_hash': '4d3cc6f6bba531847a989106d8c33f1bbf9a47974a9dadc95abaa76fe870219a'}]
+    Violations: [{'position': 0, 'event_id': '019dca80-2c28-7290-a743-52b53ee59faa', 'expected_prev_hash': '91e826c6a83999637ea7c25b26cef2f3bb6c6f9d1db8c8d8ef6de9e727232ad1', 'actual_prev_hash': '715a8e5c8128a353e91f282dbbe1c585bf563351d962d8baf20e7af1ac15efcf'}, {'position': 1, 'event_id': '019dca80-2bcb-7fc3-886b-dabbecd81cd2', 'expected_prev_hash': 'a7b92d6fc926e1d99e0122470aca75a2ca04d0ecbc36aed7a9dc25e6549acd62', 'actual_prev_hash': 'a0d6c40c09de2b7cd278860c04a8b0f955ac64570f397559ff794fa058674ea2'}, {'position': 2, 'event_id': '019dca80-0ba0-7392-af9f-8a79c72f76b7', 'expected_prev_hash': '715a8e5c8128a353e91f282dbbe1c585bf563351d962d8baf20e7af1ac15efcf', 'actual_prev_hash': 'd95da25aeff3f41243b2add8427a7dabb1bf6e44f4ee3f66e2f95f846509b15a'}, {'position': 3, 'event_id': '019dca7f-eb60-7313-8e11-b36a1e201955', 'expected_prev_hash': 'a0d6c40c09de2b7cd278860c04a8b0f955ac64570f397559ff794fa058674ea2', 'actual_prev_hash': '45c0be78fb87a3fd7030df05ef28a6215be6490dc30d1fe9347de2d291db92a0'}, {'position': 4, 'event_id': '019dca7f-eb31-7a50-8688-8e66e0916086', 'expected_prev_hash': 'd95da25aeff3f41243b2add8427a7dabb1bf6e44f4ee3f66e2f95f846509b15a', 'actual_prev_hash': '316fc3526e9bcadefd73e34fc15f0d4857279bd5a62b94a5b22296a208d336fd'}, {'position': 5, 'event_id': '019dca7e-a518-7690-b7cb-1989fb1a02a2', 'expected_prev_hash': '45c0be78fb87a3fd7030df05ef28a6215be6490dc30d1fe9347de2d291db92a0', 'actual_prev_hash': '9ca039ed587c46912ead9cfdf3ea47bdf38828f56b3743a0af20e8797ae59138'}, {'position': 6, 'event_id': '019dca7e-a4bc-76c2-8068-12ffd5e090fa', 'expected_prev_hash': '316fc3526e9bcadefd73e34fc15f0d4857279bd5a62b94a5b22296a208d336fd', 'actual_prev_hash': 'd7ccff916cfc8d581e18ddc4c14d3d4af1633ca2c60bd3743fcf27fd46a79c08'}, {'position': 7, 'event_id': '019dca7e-849f-7da3-ad9c-700adff12946', 'expected_prev_hash': '9ca039ed587c46912ead9cfdf3ea47bdf38828f56b3743a0af20e8797ae59138', 'actual_prev_hash': 'd24e388435419a46cb5b1d1fafd4b672028e870cb4944a01e06a22b6921918db'}, {'position': 8, 'event_id': '019dca7e-644f-7aa1-8ffa-bfe4ac124755', 'expected_prev_hash': 'd7ccff916cfc8d581e18ddc4c14d3d4af1633ca2c60bd3743fcf27fd46a79c08', 'actual_prev_hash': 'e07b860c8c13c14e6d662e45a06b8d20b4202ff54dffa564855a4aba6b350376'}, {'position': 9, 'event_id': '019dca7e-6428-79c2-92b0-17c8e8e349d8', 'expected_prev_hash': 'd24e388435419a46cb5b1d1fafd4b672028e870cb4944a01e06a22b6921918db', 'actual_prev_hash': '96ce36d4aeee5a9ee22e6113125fa7fafb2053c578e9a5da7de5865db3ec0758'}, {'position': 10, 'event_id': '019dca7e-3377-7053-b7c2-c255cff41451', 'expected_prev_hash': 'e07b860c8c13c14e6d662e45a06b8d20b4202ff54dffa564855a4aba6b350376', 'actual_prev_hash': '97354cd47dae9a71facc24376d76ca0001e6cb8ce606ed44b567c1564a44c3e1'}, {'position': 11, 'event_id': '019dca7e-3315-75d3-a903-01e47edf2e19', 'expected_prev_hash': '96ce36d4aeee5a9ee22e6113125fa7fafb2053c578e9a5da7de5865db3ec0758', 'actual_prev_hash': '291f8ccfcb77e11f06109d6ee8d18882dbf56c73b6c8a4d3f316d893a56254aa'}, {'position': 12, 'event_id': '019dca7e-12fe-7ea1-b77f-7e570b3cc167', 'expected_prev_hash': '97354cd47dae9a71facc24376d76ca0001e6cb8ce606ed44b567c1564a44c3e1', 'actual_prev_hash': '07785b7f497cf20486d511288015941aabe7161528df9bbb195973116523c910'}, {'position': 13, 'event_id': '019dca7d-f2a7-7f01-8314-634bd2cd1f42', 'expected_prev_hash': '291f8ccfcb77e11f06109d6ee8d18882dbf56c73b6c8a4d3f316d893a56254aa', 'actual_prev_hash': '15d9c92a6e8d4acfc0157dbea00de5d136cfedb88a70f40cdf8524217f0df89f'}, {'position': 14, 'event_id': '019dca7d-f27c-7e31-93d8-e23f6432019c', 'expected_prev_hash': '07785b7f497cf20486d511288015941aabe7161528df9bbb195973116523c910', 'actual_prev_hash': '91e826c6a83999637ea7c25b26cef2f3bb6c6f9d1db8c8d8ef6de9e727232ad1'}]
 
 [14] Compliance reports
 
-  SOC 2 Type II — CC6
+SOC 2 Type II — CC6
     Total actions  : 15
     Allowed        : 6
     Blocked        : 9  (60.0%)
     Escalated      : 6  (40.0%)
     Human approvals: 0   rejections: 0
-    Chain integrity: ✗
+    Chain integrity: ❌
     All agent actions were evaluated against a versioned declarative policy prior to execution. An append-only, hash-chained audit log was maintained for every action. High-risk actions were routed to a named human approver before execution. Audit chain integrity: VIOLATIONS DETECTED
 
-  GDPR Article 30
+GDPR Article 30
     Data access events : 3
-    Agents with access : ['019d7ebc-2da9-7812-a7bf-f5e5bcc7f32e', '019d7eb9-6557-7701-8137-a5993365b00e', '019d7ebb-67f0-7322-b5ce-251f96840432']
+    Agents with access : ['019dca7e-6285-7ea3-a4dd-277a62e70807', '019dca7f-e9b9-78c0-a098-bb87e5c60d6c', '019dca7d-f082-7550-8815-12e6162d33ab']
 
-  PCI-DSS Requirement 10
+PCI-DSS Requirement 10
     Payment actions    : 9
     Allowed            : 3
     Blocked            : 6
@@ -196,19 +227,20 @@ Expected Output
     All payment-related agent actions were intercepted, policy-evaluated, and logged prior to execution. Actions exceeding the approved threshold were held for named human approval before proceeding. No payment action bypassed the Provenance gateway.
 
 ────────────────────────────────────────────────────────────────
-  POC COMPLETE
+POC COMPLETE
 ────────────────────────────────────────────────────────────────
-  All Provenance flows exercised successfully.
+All Provenance flows exercised successfully.
 
-  Interactive API docs: http://localhost:4587/docs
+Interactive API docs: http://localhost:4587/docs
 ```
 
 #### Integration
 
-Currently, this proof-of-concept only contains the backend implementation. TypeScript and Python SDKs are planned for the next iteration to simplify integration. If you prefer to use the APIs directly, you can find an example agent policy template [here](https://github.com/aybruhm/provenance/blob/main/api/resources/policies/agent_policy_template.json) and the e2e code [here](https://github.com/aybruhm/provenance/blob/main/api/tests/manual/e2e_demo.py).
+The Python SDK (`provenance-client`) is available on PyPI — see the [SDK documentation](sdk/python/provenance_client/README.md) to get started. If you prefer to use the APIs directly, you can find an example agent policy template [here](https://github.com/aybruhm/provenance/blob/main/api/resources/policies/agent_policy_template.json) and the e2e code [here](https://github.com/aybruhm/provenance/blob/main/api/tests/manual/e2e_demo.py). A TypeScript SDK is planned for the next iteration.
 
 ## Next Steps
 
 - [ ] SDK implementation
-    - [ ] Python - PYPI release
+    - [x] Python - PYPI release
     - [ ] Typescript - NPM release
+- [ ] UI
