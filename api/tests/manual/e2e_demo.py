@@ -114,7 +114,7 @@ async def get_or_create_user(
     client: aiohttp.ClientSession,
     username: str,
     password: str,
-) -> str:
+) -> Dict[str, Any]:
     resp = await client.post(
         f"{BASE}/v1/auth/register",
         json=dict(
@@ -138,7 +138,12 @@ async def get_or_create_user(
         resp.raise_for_status()
 
     resp_json = await resp.json()
-    return resp_json["credentials"]["access_token"]  # type: ignore[return-value]
+    user_data = {
+        "id": resp_json["user"]["id"],
+        "username": resp_json["user"]["username"],
+        "access_token": resp_json["credentials"]["access_token"],
+    }
+    return user_data
 
 
 # --- get_or_create tenant ---------------------------------------
@@ -253,13 +258,32 @@ async def get_or_assign_tenant_policy(
     return tenant_policy["tenant_policy_id"]
 
 
+# ---- create api key ---------------------------------------
+
+
+async def create_api_key(
+    client: aiohttp.ClientSession,
+    user_id: str,
+    tenant_policy_id: str,
+) -> str:
+    resp = await client.post(
+        f"{BASE}/v1/api_keys/",
+        json=dict(
+            user_id=user_id,
+            scope_id=tenant_policy_id,
+        ),
+    )
+    resp.raise_for_status()
+    resp_json = await resp.json()
+    return resp_json["api_key"]
+
+
 # ── gateway execute ────────────────────────────────────────────────────────────
 
 
 async def execute(
     client: aiohttp.ClientSession,
     agent_id: str,
-    tenant_id: str,
     tenant_policy_id: str,
     action: str,
     decision: str,
@@ -270,7 +294,6 @@ async def execute(
         json=dict(
             session_id=SESSION,
             agent_id=agent_id,
-            tenant_id=tenant_id,
             tenant_policy_id=tenant_policy_id,
             action=action,
             decision=decision,
@@ -360,6 +383,45 @@ async def auto_reject(
 # ── main demo ─────────────────────────────────────────────────────────────────
 
 
+# --- audit logs --------------------------------------------------------
+
+
+async def get_audit_logs(
+    client: aiohttp.ClientSession,
+    tenant_id: str,
+) -> list[Dict[str, Any]]:
+    resp = await client.get(f"{BASE}/v1/audit/{tenant_id}")
+    resp_json = await resp.json()
+    events = resp_json["events"] or []
+    return events
+
+
+# ── integrity scan ─────────────────────────────────────────────────
+async def scan_audit_log_integrity(
+    client: aiohttp.ClientSession,
+    tenant_id: str,
+) -> Dict[str, Any]:
+    resp = await client.get(f"{BASE}/v1/audit/integrity/{tenant_id}")
+    resp_json = await resp.json()
+    scan = resp_json["integrity"]
+    return scan
+
+
+# --- reports ─────────────────────────────────────────────────
+async def get_reports(
+    client: aiohttp.ClientSession,
+    tenant_id: str,
+    report_type: str,
+) -> Dict[str, Any]:
+    resp = await client.get(f"{BASE}/v1/reports/{tenant_id}/{report_type}")
+    resp_json = await resp.json()
+    report = resp_json["report"]
+    return report
+
+
+# --- interactive demo ──────────────────────────────────────────────────────────
+
+
 async def main() -> None:
     # Quick liveness check
     try:
@@ -375,13 +437,16 @@ async def main() -> None:
 
     # Auth flow
     token = None
+    user_id = None
     async with aiohttp.ClientSession(timeout=TIMOUT) as client:
         # --- 1. Get or Create user
-        token = await get_or_create_user(
+        user_data = await get_or_create_user(
             client,
             "abc",
             "qwerty",
         )
+        user_id = user_data["id"]
+        token = user_data["access_token"]
         step(1, "Authenticated as [u:abc]")
 
     # Prep flow
@@ -427,17 +492,25 @@ async def main() -> None:
         )
         step(5, f"Tenant Policy ID: {tenant_policy_id}")
 
+        # ---- 6. Create API key
+        api_key = await create_api_key(
+            client,
+            user_id,
+            tenant_policy_id,
+        )
+        step(6, f"API Key: {api_key[:8]}_{api_key[-8:]}")
+
     # Main flow
+    headers = {"X-PROVENANCE-API-KEY": f"{api_key}"}
     async with aiohttp.ClientSession(
         timeout=TIMOUT,
         headers=headers,
     ) as client:
-        # ── 6. Small payment → ALLOW ──────────────────────────────────────────
-        step(6, "Small payment: £50 GBP  →  expect ALLOW")
+        # ── 7. Small payment → ALLOW ──────────────────────────────────────────
+        step(7, "Small payment: £50 GBP  →  expect ALLOW")
         r = await execute(
             client,
             agent_id,
-            tenant_id,
             tenant_policy_id,
             "payments.initiate",
             Decision.ALLOW,
@@ -445,15 +518,14 @@ async def main() -> None:
         )
         result(r["decision"], r["reason"])
 
-        # ── 7. Large payment → ESCALATE → APPROVE ────────────────────────────
-        step(7, "Large payment: £800 GBP  →  expect ESCALATE → human APPROVES → ALLOW")
+        # ── 8. Large payment → ESCALATE → APPROVE ────────────────────────────
+        step(8, "Large payment: £800 GBP  →  expect ESCALATE → human APPROVES → ALLOW")
         holder: dict = {}
 
         async def _do_large_payment():
             holder["large"] = await execute(
                 client,
                 agent_id,
-                tenant_id,
                 tenant_policy_id,
                 "payments.initiate",
                 Decision.ESCALATE,
@@ -473,9 +545,9 @@ async def main() -> None:
             extra=f"Escalation : {DIM}{r.get('escalation_id')}{RESET}",
         )
 
-        # ── 8. Disallowed currency → ESCALATE → REJECT ────────────────────────
+        # ── 9. Disallowed currency → ESCALATE → REJECT ────────────────────────
         step(
-            8,
+            9,
             "Payment in JPY (disallowed currency)  →  expect ESCALATE → REJECT → BLOCK",
         )
 
@@ -483,7 +555,6 @@ async def main() -> None:
             holder["jpy"] = await execute(
                 client,
                 agent_id,
-                tenant_id,
                 tenant_policy_id,
                 "payments.initiate",
                 Decision.ESCALATE,
@@ -511,7 +582,6 @@ async def main() -> None:
         r = await execute(
             client,
             agent_id,
-            tenant_id,
             tenant_policy_id,
             "data.delete",
             Decision.BLOCK,
@@ -524,7 +594,6 @@ async def main() -> None:
         r = await execute(
             client,
             agent_id,
-            tenant_id,
             tenant_policy_id,
             "email.send",
             Decision.ALLOW,
@@ -534,9 +603,7 @@ async def main() -> None:
 
         # ── 12. Audit log ──────────────────────────────────────────────────────
         step(12, "Audit log (hash-chained)")
-        resp = await client.get(f"{BASE}/v1/audit/{tenant_id}")
-        resp_json = await resp.json()
-        events = resp_json["events"] or []  # type: ignore[assignment]
+        events = await get_audit_logs(client, tenant_id)
         print(
             f"\n  {'EVENT ID':28s}  {'ACTION':30s}  {'DECISION':8s}  {'PREV HASH':20s}"
         )
@@ -558,9 +625,7 @@ async def main() -> None:
 
         # ── 13. Integrity scan ─────────────────────────────────────────────────
         step(13, "Hash-chain integrity scan")
-        resp = await client.get(f"{BASE}/v1/audit/integrity/{tenant_id}")
-        resp_json = await resp.json()
-        scan = resp_json["integrity"]  # type: ignore[assignment]
+        scan = await scan_audit_log_integrity(client, tenant_id)
         status_str = (
             f"{GREEN}✔ VALID{RESET}" if scan["valid"] else f"{RED}✗ COMPROMISED{RESET}"
         )
@@ -572,9 +637,7 @@ async def main() -> None:
         step(14, "Compliance reports")
 
         section("SOC 2 Type II — CC6")
-        resp = await client.get(f"{BASE}/v1/reports/{tenant_id}/soc2")
-        resp_json = await resp.json()
-        soc2 = resp_json["report"]  # type: ignore[assignment]
+        soc2 = await get_reports(client, tenant_id, "soc2")
         s = soc2["summary"]
         print(f"    Total actions  : {s['total_agent_actions']}")
         print(f"    Allowed        : {GREEN}{s['allowed']}{RESET}")
@@ -593,18 +656,14 @@ async def main() -> None:
         print(f"    {DIM}{soc2['attestation']}{RESET}")
 
         section("GDPR Article 30")
-        resp = await client.get(f"{BASE}/v1/reports/{tenant_id}/gdpr")
-        resp_json = await resp.json()
-        gdpr = resp_json["report"]  # type: ignore[assignment]
+        gdpr = await get_reports(client, tenant_id, "gdpr")
         print(f"    Data access events : {gdpr['summary']['total_data_access_events']}")
         print(
             f"    Agents with access : {gdpr['summary']['agents_with_data_access'] or 'none'}"
         )
 
         section("PCI-DSS Requirement 10")
-        resp = await client.get(f"{BASE}/v1/reports/{tenant_id}/pci")
-        resp_json = await resp.json()
-        pci = resp_json["report"]  # type: ignore[assignment]
+        pci = await get_reports(client, tenant_id, "pci")
         ps = pci["summary"]
         print(f"    Payment actions    : {ps['total_payment_actions']}")
         print(f"    Allowed            : {GREEN}{ps['allowed']}{RESET}")

@@ -1,6 +1,8 @@
 from .request import (
     AgentCreateRequestDTO,
     AgentUpdateRequestDTO,
+    APIKeyCreateRequestDTO,
+    APIKeyUpdateScopeRequestDTO,
     AssignPolicyToTenantRequestDTO,
     DeactivateTenantPolicyRequestDTO,
     EscalationCreateRequestDTO,
@@ -16,6 +18,9 @@ from .request import (
 from .response import (
     AgentListResponseDTO,
     AgentResponseDTO,
+    APIKeyListResponseDTO,
+    APIKeyMinimalResponseDTO,
+    APIKeyResponseDTO,
     AuditEventIntegrityResponseDTO,
     AuditEventResponseDTO,
     CredentialsDTO,
@@ -56,6 +61,12 @@ __all__ = [
     "AgentUpdateRequestDTO",
     "AgentResponseDTO",
     "AgentListResponseDTO",
+    # API Keys
+    "APIKeyCreateRequestDTO",
+    "APIKeyUpdateScopeRequestDTO",
+    "APIKeyResponseDTO",
+    "APIKeyMinimalResponseDTO",
+    "APIKeyListResponseDTO",
     # Reports
     "ReportResponseDTO",
     # Responses

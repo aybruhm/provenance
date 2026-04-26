@@ -1,0 +1,9 @@
+[project]
+name = "provenance-client"
+version = "0.1.0"
+description = "HTTP client for Provenance"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "httpx>=0.28.1",
+]

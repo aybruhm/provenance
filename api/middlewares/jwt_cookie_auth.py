@@ -19,30 +19,16 @@ _JWT_KEY = env.JWT_KEY
 _JWT_ALGORITHM = env.JWT_ALGORITHM
 
 
-class JWTCookie(APIKeyCookie):
-    """
-    JWT Cookie token authentication middleware for FastAPI.
-
-    This class handles JWT token verification and user authentication from HTTP-only cookies.
-    """
-
+class JWTCookieAuth(APIKeyCookie):
     def __init__(
         self,
         auto_error: bool = True,
         name: str = "access_token",
     ):
-        """
-        Initialize the JWT Cookie authentication middleware.
-        """
-
         self.user_service = UserService(dao=UserDAO())
         super().__init__(name=name, auto_error=auto_error)
 
     async def __call__(self, request: Request):
-        """
-        Main authentication method called for each request.
-        """
-
         try:
             # Get the token from the cookie using the parent class method
             access_token = await super().__call__(request)

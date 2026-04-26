@@ -9,7 +9,7 @@ from apis.fastapi.dtos import (
 )
 from core.escalations.manager import EscalationManager
 from core.escalations.service import EscalationService
-from services.dependencies import get_current_user
+from services.dependencies import get_authenticated
 from utils.logger_utils import logger
 
 
@@ -24,7 +24,7 @@ class EscalationAPIRouter:
 
         # Initialize api router
         self.router = APIRouter(
-            dependencies=[Depends(get_current_user)],
+            dependencies=[Depends(get_authenticated)],
         )
 
         # Register routes

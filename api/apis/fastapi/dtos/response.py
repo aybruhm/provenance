@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from core.agents.dtos import AgentDTO
+from core.api_keys.dtos import APIKeyDTO
 from core.audit_events.dtos import AuditEventDTO
 from core.audit_events.types import ChainValidationResult
 from core.escalations.dtos import EscalationDecisionDTO, EscalationDTO
@@ -77,6 +78,21 @@ class EscalationResponseDTO(BaseModel):
 
 class EscalationDecisionResponseDTO(EscalationDecisionDTO):
     pass
+
+
+# ------- API Keys --------
+
+
+class APIKeyMinimalResponseDTO(BaseModel):
+    api_key: str
+
+
+class APIKeyResponseDTO(BaseModel):
+    api_key: APIKeyDTO
+
+
+class APIKeyListResponseDTO(BaseModel):
+    api_keys: list[APIKeyDTO]
 
 
 # ------- Execution Gateway -------

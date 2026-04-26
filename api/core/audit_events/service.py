@@ -1,5 +1,5 @@
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
 
 from core.audit_events import utils
 from core.audit_events.dtos import AuditEventDTO, CreateAuditEventDTO
@@ -38,7 +38,6 @@ class AuditEventService:
         return AuditEventDBE(
             session_id=dto.session_id,
             agent_id=dto.agent_id,
-            tenant_id=dto.tenant_id,
             tenant_policy_id=dto.tenant_policy_id,
             action=dto.action,
             decision=dto.decision,
@@ -47,18 +46,19 @@ class AuditEventService:
         )
 
     def _get_utc_timestamp(self) -> str:
-        return datetime.utcnow().isoformat()
+        return datetime.now().isoformat()
 
     async def create_audit_event(
-        self, create_data: CreateAuditEventDTO
+        self, tenant_id: str, create_data: CreateAuditEventDTO
     ) -> AuditEventDTO:
         audit_event_dbe = self._map_dto_to_dbe(dto=create_data)
+        audit_event_dbe.tenant_id = tenant_id  # type: ignore
         if create_data.parameters:
             audit_event_dbe.payload_hash = utils.hash_payload(  # type: ignore
                 payload=create_data.parameters
             )
             audit_event_dbe.prev_hash = await self.get_prev_hash(  # type: ignore
-                tenant_id=UUID(create_data.tenant_id)
+                tenant_id=UUID(tenant_id)
             )
             audit_event_dbe.timestamp = self._get_utc_timestamp()  # type: ignore
 

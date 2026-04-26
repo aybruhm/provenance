@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Request
 
 from apis.fastapi.dtos import (
+    Decision,
     EscalationCreateRequestDTO,
     ExecuteRequestDTO,
     ExecuteResponseDTO,
@@ -13,7 +14,7 @@ from core.escalations.manager import EscalationManager
 from core.escalations.service import EscalationService
 from core.policy.engine import PolicyEngine
 from core.tenants.service import TenantService
-from services.dependencies import get_current_user
+from services.dependencies import get_authenticated
 from utils.logger_utils import logger
 
 
@@ -34,7 +35,7 @@ class ExecutionGatewayAPIRouter:
 
         # Initialize api router
         self.router = APIRouter(
-            dependencies=[Depends(get_current_user)],
+            dependencies=[Depends(get_authenticated)],
         )
 
         # Register routes
@@ -50,21 +51,46 @@ class ExecutionGatewayAPIRouter:
         Main gateway endpoint.
 
         Pipeline:
-            1. Load tenant policy
-            2. Evaluate policy → ALLOW | BLOCK | ESCALATE
-            3. If ESCALATE: hold execution, await human decision (60 s timeout)
-            4. Write immutable audit event
-            5. Return decision to caller
+            1. Guardrails
+            2. Load tenant policy
+            3. Evaluate policy → ALLOW | BLOCK | ESCALATE
+            4. If ESCALATE: hold execution, await human decision (60 s timeout)
+            5. Write immutable audit event
+            6. Return decision to caller
         """
 
-        tenant = await self.tenant_service.get_tenant(
-            id=UUID(execute_request.tenant_id),
-            user_id=request.state.user_id,
-        )
-        if not tenant:
+        scope = getattr(request.state, "scope", None)
+        if scope and not execute_request.tenant_policy_id:
+            # On sdk requests, set automatically.
+            execute_request.tenant_policy_id = str(scope)
+
+        if not scope and not execute_request.tenant_policy_id:
+            # On api requests, tenant_policy_id is required.
             return ExecuteResponseDTO(
-                decision="BLOCK",  # type: ignore
-                reason="Tenant not found",
+                decision=Decision.BLOCK,  # type: ignore
+                reason="tenant_policy_id is required",
+            )
+
+        if not execute_request.tenant_policy_id:
+            return ExecuteResponseDTO(
+                decision=Decision.BLOCK,  # type: ignore
+                reason="tenant_policy_id is required",
+            )
+
+        tenant_policy = await self.policy_engine.service.get_tenant_policy(
+            tenant_policy_id=UUID(execute_request.tenant_policy_id)
+        )
+        if not tenant_policy:
+            return ExecuteResponseDTO(
+                decision=Decision.BLOCK,  # type: ignore
+                reason="tenant_policy_id not found",
+            )
+
+        tenant_id = tenant_policy.tenant_id
+        if not tenant_id:
+            return ExecuteResponseDTO(
+                decision=Decision.BLOCK,  # type: ignore
+                reason="tenant_policy_id does not belong to a tenant",
             )
 
         policy = await self.policy_engine.load_policy(
@@ -85,7 +111,7 @@ class ExecutionGatewayAPIRouter:
         if decision == "BLOCK":
             execute_request.decision = "BLOCK"
             event = await self.audit_service.create_audit_event(
-                create_data=execute_request
+                tenant_id=tenant_id, create_data=execute_request
             )
             return ExecuteResponseDTO(
                 event_id=str(event.id),
@@ -97,7 +123,7 @@ class ExecutionGatewayAPIRouter:
         if decision == "ESCALATE":
             payload_hash = audit_utils.hash_payload(payload=parameters)
             escalation_create_data = EscalationCreateRequestDTO(
-                tenant_id=UUID(execute_request.tenant_id),
+                tenant_id=UUID(tenant_id),
                 agent_id=UUID(execute_request.agent_id),
                 action=execute_request.action,
                 parameters_hash=payload_hash,
@@ -136,7 +162,6 @@ class ExecutionGatewayAPIRouter:
         audit_create_data = ExecuteRequestDTO(
             session_id=execute_request.session_id,
             agent_id=execute_request.agent_id,
-            tenant_id=execute_request.tenant_id,
             tenant_policy_id=execute_request.tenant_policy_id,
             action=execute_request.action,
             parameters=execute_request.parameters,
@@ -145,7 +170,7 @@ class ExecutionGatewayAPIRouter:
             actor_human_id=actor_human_id,
         )
         event = await self.audit_service.create_audit_event(
-            create_data=audit_create_data
+            tenant_id=tenant_id, create_data=audit_create_data
         )
 
         return ExecuteResponseDTO(

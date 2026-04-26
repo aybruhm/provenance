@@ -52,5 +52,6 @@ class UpdatePolicyDTO(BaseModel):
 
 class PolicyDTO(CreatePolicyDTO):
     id: str
+    tenant_id: str | None = None
     created_at: str
     updated_at: str

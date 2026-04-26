@@ -13,7 +13,7 @@ from apis.fastapi.dtos import (
     TenantPolicyResponseDTO,
 )
 from core.policy.service import PolicyService
-from services.dependencies import get_current_user
+from services.dependencies import get_authenticated
 from services.exceptions import (
     BadRequestException,
     InternalServerErrorException,
@@ -28,7 +28,7 @@ class PolicyAPIRouter:
 
         # Initialize api router
         self.router = APIRouter(
-            dependencies=[Depends(get_current_user)],
+            dependencies=[Depends(get_authenticated)],
         )
 
         # Register routes
