@@ -4,10 +4,26 @@ run:
 stop:
 	docker compose -f hosting/compose.yml --env-file api/.env down
 
+db-reset:
+	@echo "WARNING: This will delete all data in the database!"
+	@read -p "Continue? (y/n) " -n 1 -r; \
+	echo ""; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		docker compose -f hosting/compose.yml --env-file api/.env exec -T db psql -U abc -d provenance_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" && \
+		docker compose -f hosting/compose.yml --env-file api/.env exec api python -m alembic upgrade head && \
+		echo "✓ Database reset and migrated"; \
+	else \
+		echo "Cancelled"; \
+	fi
+
 test_ci_workflow:
 	@command -v act > /dev/null 2>&1 || (echo "Error: 'act' is not installed or not in PATH. See https://github.com/nektos/act" && exit 1)
 	@if [ -z "$(GH_TOKEN)" ]; then \
 		echo "Error: Please provide a github token. Usage: make test_ci_workflow GH_TOKEN=<your-github-pat>"; \
+		exit 1; \
+	fi
+	@if [ -z "$(TEST_PYPI_TOKEN)" ]; then \
+		echo "Error: Please provide a test pypi token. Usage: make test_ci_workflow TEST_PYPI_TOKEN=<your-test-pypi-token>"; \
 		exit 1; \
 	fi
 	@echo "Running CI workflow..."
