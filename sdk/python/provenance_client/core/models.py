@@ -9,7 +9,7 @@ class Decision(str, Enum):
     ESCALATE = "ESCALATE"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ExecutionResult:
     """
     Returned by every Provenance execution path.
