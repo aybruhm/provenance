@@ -36,7 +36,11 @@ jobs:
                   git config user.email "github-actions[bot]@users.noreply.github.com"
                   git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
                   git add sdk/python/pyproject.toml
-                  git commit -m "chore (sdk): bump provenance-client to v${{ github.event.inputs.version }}"
+                  if git diff --cached --quiet; then
+                    echo "Version already at ${{ github.event.inputs.version }} — skipping commit"
+                  else
+                    git commit -m "chore (sdk): bump provenance-client to v${{ github.event.inputs.version }}"
+                  fi
                   git tag "v${{ github.event.inputs.version }}"
                   if [ "${ACT}" = "true" ]; then
                     echo "Skipping push — running locally in act"
