@@ -70,6 +70,38 @@ result = gateway.execute("payments.initiate", {"amount": 50, "currency": "GBP"},
 print(result.decision)  # Decision.ALLOW
 ```
 
+## TypeScript SDK
+
+The `provenance-client` package is available on npm. Install it to integrate Provenance policy gating into your TypeScript or JavaScript agents:
+
+```bash
+npm install provenance-client
+# or with yarn/pnpm
+yarn add provenance-client
+pnpm add provenance-client
+```
+
+**Requires Node.js 18+** · [SDK documentation](sdk/typescript/README.md)
+
+```typescript
+import { ProvenanceClient, ProvenanceGateway, Decision } from "provenance-client";
+
+const gateway = new ProvenanceGateway(
+  new ProvenanceClient({
+    gatewayUrl: "http://localhost:4587",
+    agentId: "<your-agent-id>",
+    apiKey: "pk_live_...",
+  })
+);
+
+const result = await gateway.asyncExecute(
+  "payments.initiate",
+  { amount: 50, currency: "GBP" },
+  { decision: Decision.ALLOW }
+);
+console.log(result.decision);  // Decision.ALLOW
+```
+
 ---
 
 ## Prerequisites
@@ -236,11 +268,11 @@ Interactive API docs: http://localhost:4587/docs
 
 #### Integration
 
-The Python SDK (`provenance-client`) is available on PyPI — see the [SDK documentation](sdk/python/provenance_client/README.md) to get started. If you prefer to use the APIs directly, you can find an example agent policy template [here](https://github.com/aybruhm/provenance/blob/main/api/resources/policies/agent_policy_template.json) and the e2e code [here](https://github.com/aybruhm/provenance/blob/main/api/tests/manual/e2e_demo.py). A TypeScript SDK is planned for the next iteration.
+The Python SDK (`provenance-client`) is available on PyPI and the TypeScript SDK is available on npm — see the [Python SDK documentation](sdk/python/provenance_client/README.md) and [TypeScript SDK documentation](sdk/typescript/README.md) to get started. If you prefer to use the APIs directly, you can find an example agent policy template [here](https://github.com/aybruhm/provenance/blob/main/api/resources/policies/agent_policy_template.json) and the e2e code [here](https://github.com/aybruhm/provenance/blob/main/api/tests/manual/e2e_demo.py).
 
 ## Next Steps
 
-- [ ] SDK implementation
+- [x] SDK implementation
     - [x] Python - PYPI release
-    - [ ] Typescript - NPM release
+    - [x] Typescript - NPM release
 - [ ] UI
