@@ -55,9 +55,7 @@ export class ProvenanceSession implements ProvenanceSessionProtocol {
   }
 
   public [Symbol.dispose](): void {
-    console.log(
-      `Session ${this.sessionId} completed with ${this._results.length} results`,
-    );
+    // No-op by default; consumers can inspect results explicitly.
   }
 
   public toString(): string {
