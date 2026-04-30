@@ -52,7 +52,7 @@ export class GatewayError extends ProvenanceError {
   public readonly cause: Error;
 
   constructor(url: string, cause: Error) {
-    super(`Sentinel gateway unreachable at ${url}: ${cause.message}`);
+    super(`Provenance gateway unreachable at ${url}: ${cause.message}`);
     this.name = "GatewayError";
     this.url = url;
     this.cause = cause;

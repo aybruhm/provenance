@@ -81,7 +81,6 @@ export class ProvenanceClient {
     );
   }
 
-  public async close(): Promise<void> {
-    // Axios doesn't have a close method, but we can clean up if needed
-  }
+  /** No-op: this SDK uses Node's default HTTP agent; no resources to release. */
+  public async close(): Promise<void> {}
 }

@@ -9,7 +9,7 @@ export interface ProvenanceSessionProtocol {
     },
   ): <T extends (...args: any[]) => any>(
     func: T,
-  ) => (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>>;
+  ) => (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>> | null>;
 
   asyncExecute(
     action: string,

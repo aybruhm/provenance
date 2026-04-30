@@ -13,6 +13,8 @@ pnpm add provenance-client
 
 **Requires Node.js 18+** · Licensed under [GNU GPL v2](https://github.com/aybruhm/provenance/blob/main/LICENSE)
 
+> **Module format:** This package ships as CommonJS. ESM consumers (Node 16+) can use named imports (`import { ProvenanceClient } from "provenance-client"`) directly. CJS consumers use `const { ProvenanceClient } = require("provenance-client")`.
+
 ---
 
 ## Authentication
@@ -105,7 +107,7 @@ The decorator captures all call-site arguments and includes them in the audit lo
 
 ### 3. Session context manager
 
-Groups a series of tool calls under a shared `sessionId`. All events in the session are correlated in the audit log. On exit, the session logs a summary.
+Groups a series of tool calls under a shared `sessionId`. All events in the session are correlated in the audit log. On exit, inspect `sess.results`, `sess.allowedCount`, and `sess.blockedCount` directly.
 
 ```typescript
 // Using the ES 'using' syntax (requires appropriate setup) or manual disposal

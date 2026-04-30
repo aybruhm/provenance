@@ -1,4 +1,5 @@
 import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 import { Decision, ExecutionResult } from "./models";
 import { ProvenanceClient } from "./client";
 import { ProvenanceSession } from "./session";
@@ -60,10 +61,10 @@ export class ProvenanceGateway implements ProvenanceGatewayProtocol {
     } = {},
   ): <T extends (...args: any[]) => any>(
     func: T,
-  ) => (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
+  ) => (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>> | null> {
     return <T extends (...args: any[]) => any>(
       func: T,
-    ): ((...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>>) => {
+    ): ((...args: Parameters<T>) => Promise<Awaited<ReturnType<T>> | null>) => {
       const resolvedAction =
         action ??
         `${(func as any).__module__ ?? "unknown"}.${(func as any).__qualname__ ?? func.name}`;
@@ -72,7 +73,6 @@ export class ProvenanceGateway implements ProvenanceGatewayProtocol {
       const extractParams = (args: any[]): Record<string, any> => {
         const params: Record<string, any> = {};
         try {
-          // Attempt to extract parameter names from function signature
           const fnStr = func
             .toString()
             .replace(/((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm, "");
@@ -89,7 +89,6 @@ export class ProvenanceGateway implements ProvenanceGatewayProtocol {
             params[name] = args[i];
           }
         } catch (e) {
-          // Fallback to indexed args if parsing fails
           for (let i = 0; i < args.length; i++) {
             params[`arg${i}`] = args[i];
           }
@@ -97,16 +96,18 @@ export class ProvenanceGateway implements ProvenanceGatewayProtocol {
         return params;
       };
 
-      const asyncWrapper = async (
+      const self = this;
+      const asyncWrapper = async function (
+        this: ThisParameterType<T>,
         ...args: Parameters<T>
-      ): Promise<Awaited<ReturnType<T>> | null> => {
+      ): Promise<Awaited<ReturnType<T>> | null> {
         const params = extractParams(args);
         try {
-          const result = await this.asyncExecute(resolvedAction, params, {
+          const result = await self.asyncExecute(resolvedAction, params, {
             sessionId: options.sessionId,
             decision: options.decision,
           });
-          const toolResult = await Promise.resolve((func as any)(...args));
+          const toolResult = await Promise.resolve(func.apply(this, args));
           result.toolResult = toolResult;
           return toolResult;
         } catch (error) {
@@ -120,7 +121,7 @@ export class ProvenanceGateway implements ProvenanceGatewayProtocol {
       const wrapper = asyncWrapper;
       (wrapper as any)[PROVENANCE_ATTR] = true;
       (wrapper as any)._provenance_action = resolvedAction;
-      return wrapper as any;
+      return wrapper;
     };
   }
 
@@ -131,6 +132,3 @@ export class ProvenanceGateway implements ProvenanceGatewayProtocol {
     );
   }
 }
-
-// Re-export for convenience
-import { v4 as uuidv4 } from "uuid";

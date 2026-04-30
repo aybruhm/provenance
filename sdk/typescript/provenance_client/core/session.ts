@@ -35,7 +35,7 @@ export class ProvenanceSession implements ProvenanceSessionProtocol {
     } = {},
   ): <T extends (...args: any[]) => any>(
     func: T,
-  ) => (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
+  ) => (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>> | null> {
     return this.gateway.guard(action, {
       ...options,
       sessionId: this.sessionId,
