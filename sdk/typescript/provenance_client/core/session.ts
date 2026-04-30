@@ -12,18 +12,6 @@ export class ProvenanceSession implements ProvenanceSessionProtocol {
     this.sessionId = sessionId;
   }
 
-  public execute(
-    action: string,
-    parameters: Record<string, any>,
-    options: {
-      decision?: Decision;
-    } = {},
-  ): ExecutionResult {
-    throw new Error(
-      "Synchronous execution is not supported for ProvenanceSession. Use asyncExecute() instead.",
-    );
-  }
-
   public async asyncExecute(
     action: string,
     parameters: Record<string, any>,

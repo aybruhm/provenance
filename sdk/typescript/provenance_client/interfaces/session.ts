@@ -11,14 +11,6 @@ export interface ProvenanceSessionProtocol {
     func: T,
   ) => (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>>;
 
-  execute(
-    action: string,
-    parameters: Record<string, any>,
-    options?: {
-      decision?: Decision;
-    },
-  ): ExecutionResult;
-
   asyncExecute(
     action: string,
     parameters: Record<string, any>,

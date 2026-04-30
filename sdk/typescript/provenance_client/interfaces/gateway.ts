@@ -12,15 +12,6 @@ export interface ProvenanceGatewayProtocol {
     func: T,
   ) => (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>>;
 
-  execute(
-    action: string,
-    parameters: Record<string, any>,
-    options?: {
-      sessionId?: string;
-      decision?: Decision;
-    },
-  ): ExecutionResult;
-
   asyncExecute(
     action: string,
     parameters: Record<string, any>,

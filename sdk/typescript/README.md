@@ -133,7 +133,7 @@ try {
 
 ### 4. Asynchronous Execution
 
-Unlike the Python SDK, the TypeScript SDK strictly enforces asynchronous execution due to the nature of network requests in Node.js. Synchronous execution methods (like `execute()`) will throw an error advising you to use `asyncExecute()`.
+Unlike the Python SDK, the TypeScript SDK is async-only due to the nature of network requests in Node.js. Use `asyncExecute()` for policy evaluation.
 
 ```typescript
 const result = await gateway.asyncExecute(

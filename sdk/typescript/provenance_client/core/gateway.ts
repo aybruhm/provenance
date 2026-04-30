@@ -14,19 +14,6 @@ export class ProvenanceGateway implements ProvenanceGatewayProtocol {
     return `ProvenanceGateway(cl=${this.client.gatewayUrl}, agent=${this.client.agentId})`;
   }
 
-  public execute(
-    action: string,
-    parameters: Record<string, any>,
-    options: {
-      sessionId?: string;
-      decision?: Decision;
-    } = {},
-  ): ExecutionResult {
-    throw new Error(
-      "Synchronous execution is not supported in the TypeScript SDK. Use asyncExecute() instead.",
-    );
-  }
-
   public async asyncExecute(
     action: string,
     parameters: Record<string, any>,
