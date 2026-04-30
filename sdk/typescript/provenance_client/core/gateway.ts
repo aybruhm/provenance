@@ -71,8 +71,12 @@ export class ProvenanceGateway implements ProvenanceGatewayProtocol {
       decision?: Decision;
       raiseOnBlock?: boolean;
     } = {},
-  ): <T extends (...args: any[]) => any>(func: T) => T {
-    return <T extends (...args: any[]) => any>(func: T): T => {
+  ): <T extends (...args: any[]) => any>(
+    func: T,
+  ) => (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
+    return <T extends (...args: any[]) => any>(
+      func: T,
+    ): ((...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>>) => {
       const resolvedAction =
         action ??
         `${(func as any).__module__ ?? "unknown"}.${(func as any).__qualname__ ?? func.name}`;
@@ -106,32 +110,16 @@ export class ProvenanceGateway implements ProvenanceGatewayProtocol {
         return params;
       };
 
-      const syncWrapper = (...args: any[]): any => {
-        const params = extractParams(args);
-        try {
-          const result = this.execute(resolvedAction, params, {
-            sessionId: options.sessionId,
-            decision: options.decision,
-          });
-          const toolResult = (func as any)(...args);
-          result.toolResult = toolResult;
-          return toolResult;
-        } catch (error) {
-          if (error instanceof PolicyBlockedError && !raiseOnBlock) {
-            return null;
-          }
-          throw error;
-        }
-      };
-
-      const asyncWrapper = async (...args: any[]): Promise<any> => {
+      const asyncWrapper = async (
+        ...args: Parameters<T>
+      ): Promise<Awaited<ReturnType<T>> | null> => {
         const params = extractParams(args);
         try {
           const result = await this.asyncExecute(resolvedAction, params, {
             sessionId: options.sessionId,
             decision: options.decision,
           });
-          const toolResult = await (func as any)(...args);
+          const toolResult = await Promise.resolve((func as any)(...args));
           result.toolResult = toolResult;
           return toolResult;
         } catch (error) {
@@ -142,11 +130,7 @@ export class ProvenanceGateway implements ProvenanceGatewayProtocol {
         }
       };
 
-      const wrapper =
-        (func as any)[Symbol.toStringTag] === "AsyncFunction" ||
-        func.constructor.name === "AsyncFunction"
-          ? asyncWrapper
-          : syncWrapper;
+      const wrapper = asyncWrapper;
       (wrapper as any)[PROVENANCE_ATTR] = true;
       (wrapper as any)._provenance_action = resolvedAction;
       return wrapper as any;

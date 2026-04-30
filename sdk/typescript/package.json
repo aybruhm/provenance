@@ -1,6 +1,6 @@
 {
   "name": "provenance-client",
-  "type": "module",
+  "type": "commonjs",
   "version": "0.1.0",
   "description": "Policy-gated execution for AI agents",
   "main": "dist/index.js",

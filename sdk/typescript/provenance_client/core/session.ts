@@ -45,7 +45,9 @@ export class ProvenanceSession implements ProvenanceSessionProtocol {
       decision?: Decision;
       raiseOnBlock?: boolean;
     } = {},
-  ): <T extends (...args: any[]) => any>(func: T) => T {
+  ): <T extends (...args: any[]) => any>(
+    func: T,
+  ) => (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
     return this.gateway.guard(action, {
       ...options,
       sessionId: this.sessionId,
