@@ -1,0 +1,118 @@
+name: Release TypeScript SDK
+
+on:
+    workflow_dispatch:
+        inputs:
+            version:
+                description: "Version to release (e.g. 0.2.0)"
+                required: true
+
+jobs:
+    tag:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Validate version format
+              run: |
+                  echo "${{ github.event.inputs.version }}" \
+                    | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' \
+                    || (echo "Invalid version format — expected MAJOR.MINOR.PATCH" && exit 1)
+
+            - name: Bump version in package.json
+              run: |
+                  npm --prefix sdk/typescript pkg set version=${{ github.event.inputs.version }}
+
+            - name: Commit and tag
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              run: |
+                  git config user.name  "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
+                  git add sdk/typescript/package.json
+                  if git diff --cached --quiet; then
+                    echo "Version already at ${{ github.event.inputs.version }} — skipping commit"
+                  else
+                    git commit -m "chore (sdk): bump provenance-client to v${{ github.event.inputs.version }}"
+                  fi
+                  git tag "v${{ github.event.inputs.version }}"
+                  if [ "${ACT}" = "true" ]; then
+                    echo "Skipping push — running locally in act"
+                  else
+                    git push origin HEAD "v${{ github.event.inputs.version }}"
+                  fi
+
+    build:
+        runs-on: ubuntu-latest
+        needs: [tag]
+        steps:
+            - uses: actions/checkout@v4
+              if: ${{ env.ACT == 'true' }}
+
+            - uses: actions/checkout@v4
+              if: ${{ env.ACT != 'true' }}
+              with:
+                  ref: v${{ github.event.inputs.version }}
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+                  cache-dependency-path: sdk/typescript/package-lock.json
+
+            - name: Install dependencies
+              working-directory: sdk/typescript
+              run: npm ci
+
+            - name: Build
+              working-directory: sdk/typescript
+              run: npm run build
+
+            - name: Upload dist artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: dist
+                  path: sdk/typescript/dist/
+
+    publish:
+        runs-on: ubuntu-latest
+        needs: [build]
+        steps:
+            - uses: actions/checkout@v4
+              if: ${{ env.ACT == 'true' }}
+
+            - uses: actions/checkout@v4
+              if: ${{ env.ACT != 'true' }}
+              with:
+                  ref: v${{ github.event.inputs.version }}
+
+            - uses: actions/download-artifact@v4
+              with:
+                  name: dist
+                  path: sdk/typescript/dist/
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  registry-url: "https://registry.npmjs.org"
+
+            - name: Verify dist artifacts
+              run: |
+                  test -d sdk/typescript/dist
+                  ls -la sdk/typescript/dist
+
+            - name: Publish to npm
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+              working-directory: sdk/typescript
+              run: |
+                  if [ "${ACT}" = "true" ]; then
+                    echo "Skipping publish — running locally in act"
+                  else
+                    npm publish --access public
+                  fi

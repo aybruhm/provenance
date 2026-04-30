@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2020", "ESNext.Disposable"],
+    "outDir": "./dist",
+    "rootDir": "./provenance_client",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+  },
+  "include": ["provenance_client/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}
