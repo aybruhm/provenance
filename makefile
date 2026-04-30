@@ -27,9 +27,9 @@ test_ci_workflow:
 		exit 1; \
 	fi
 	@if [ -z "$(NPM_TOKEN)" ]; then \
-        echo "Error: Please provide an npm token. Usage: make test_ci_workflow NPM_TOKEN=<your-npm-token>"; \
-        exit 1; \
-    fi
+		echo "Error: Please provide an npm token. Usage: make test_ci_workflow NPM_TOKEN=<your-npm-token>"; \
+		exit 1; \
+	fi
 	@echo "Running CI workflow..."
 	act workflow_dispatch --input version=0.2.0 --secret GH_TOKEN=$(GH_TOKEN) --secret TEST_PYPI_TOKEN=$(TEST_PYPI_TOKEN) --secret NPM_TOKEN=$(NPM_TOKEN) --artifact-server-path /tmp/act-artifacts
 

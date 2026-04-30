@@ -19,12 +19,9 @@ export class ProvenanceSession implements ProvenanceSessionProtocol {
       decision?: Decision;
     } = {},
   ): ExecutionResult {
-    const result = this.gateway.execute(action, parameters, {
-      sessionId: this.sessionId,
-      decision: options.decision,
-    });
-    this._results.push(result);
-    return result;
+    throw new Error(
+      "Synchronous execution is not supported for ProvenanceSession. Use asyncExecute() instead.",
+    );
   }
 
   public async asyncExecute(
