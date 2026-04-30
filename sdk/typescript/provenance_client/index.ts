@@ -3,7 +3,7 @@ export { ProvenanceClient } from "./core/client";
 export { ProvenanceGateway } from "./core/gateway";
 export { ProvenanceSession } from "./core/session";
 export {
-  SentinelError,
+  ProvenanceError,
   EscalationError,
   PolicyBlockedError,
   EscalationTimeoutError,

@@ -229,7 +229,7 @@ Convenience getters: `.allowed`, `.blocked`, `.escalated` → `boolean`
 | `EscalationError` | Escalation is still in progress when queried |
 | `GatewayError` | Gateway unreachable and `onGatewayError="closed"` (default) |
 
-All inherit from `SentinelError`.
+All inherit from `ProvenanceError`.
 
 ```typescript
 import {

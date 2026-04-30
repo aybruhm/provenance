@@ -1,11 +1,11 @@
-export class SentinelError extends Error {
+export class ProvenanceError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "SentinelError";
+    this.name = "ProvenanceError";
   }
 }
 
-export class EscalationError extends SentinelError {
+export class EscalationError extends ProvenanceError {
   public readonly action: string;
   public readonly escalationId: string;
 
@@ -19,7 +19,7 @@ export class EscalationError extends SentinelError {
   }
 }
 
-export class PolicyBlockedError extends SentinelError {
+export class PolicyBlockedError extends ProvenanceError {
   public readonly action: string;
   public readonly reason: string;
   public readonly eventId: string;
@@ -33,7 +33,7 @@ export class PolicyBlockedError extends SentinelError {
   }
 }
 
-export class EscalationTimeoutError extends SentinelError {
+export class EscalationTimeoutError extends ProvenanceError {
   public readonly action: string;
   public readonly escalationId: string;
 
@@ -47,7 +47,7 @@ export class EscalationTimeoutError extends SentinelError {
   }
 }
 
-export class GatewayError extends SentinelError {
+export class GatewayError extends ProvenanceError {
   public readonly url: string;
   public readonly cause: Error;
 
