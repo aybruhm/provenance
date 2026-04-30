@@ -5,8 +5,8 @@ from core.escalations.dtos import (
     EscalationDTO,
     UpdateEscalationDTO,
 )
+from core.escalations.interfaces import EscalationDAOInterface
 from dbs.postgres.escalations.dbes import EscalationDBE
-from dbs.postgres.escalations.interfaces import EscalationDAOInterface
 
 
 class EscalationService:

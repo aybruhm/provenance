@@ -4,9 +4,9 @@ from uuid import UUID
 from sqlalchemy import select, update
 from sqlalchemy.sql.elements import ColumnElement, NamedColumn
 
+from core.escalations.interfaces import EscalationDAOInterface
 from dbs.postgres.engine import get_db_session
 from dbs.postgres.escalations.dbes import EscalationDBE
-from dbs.postgres.escalations.interfaces import EscalationDAOInterface
 
 
 class EscalationDAO(EscalationDAOInterface):

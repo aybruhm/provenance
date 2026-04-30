@@ -4,8 +4,8 @@ from uuid import UUID
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 
+from core.agents.interfaces import AgentDAOInterface
 from dbs.postgres.agents.dbes import AgentDBE
-from dbs.postgres.agents.interfaces import AgentDAOInterface
 from dbs.postgres.engine import get_db_session
 
 

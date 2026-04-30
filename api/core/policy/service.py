@@ -1,10 +1,9 @@
 from uuid import UUID
 
 from core.policy.dtos import CreatePolicyDTO, PolicyDTO, UpdatePolicyDTO
+from core.policy.interfaces import PolicyDAOInterface, TenantPolicyInterface
 from dbs.postgres.policy.dbes import PolicyDBE
-from dbs.postgres.policy.interfaces import PolicyDAOInterface
 from dbs.postgres.tenant_policies.dbes import TenantPolicyDBE
-from dbs.postgres.tenant_policies.interfaces import TenantPolicyInterface
 
 
 class PolicyService:

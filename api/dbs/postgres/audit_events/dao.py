@@ -3,8 +3,8 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.sql.elements import ColumnElement, NamedColumn
 
+from core.audit_events.interfaces import AuditEventDAOInterface
 from dbs.postgres.audit_events.dbes import AuditEventDBE
-from dbs.postgres.audit_events.interfaces import AuditEventDAOInterface
 from dbs.postgres.engine import get_db_session
 
 

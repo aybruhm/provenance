@@ -5,9 +5,9 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import ColumnElement
 
+from core.tenants.interfaces import TenantDAOInterface
 from dbs.postgres.engine import get_db_session
 from dbs.postgres.tenants.dbes import TenantDBE
-from dbs.postgres.tenants.interfaces import TenantDAOInterface
 
 
 class TenantDAO(TenantDAOInterface):

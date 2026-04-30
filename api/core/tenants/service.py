@@ -1,8 +1,8 @@
 from uuid import UUID
 
 from core.tenants.dtos import CreateTenantDTO, TenantDTO, UpdateTenantDTO
+from core.tenants.interfaces import TenantDAOInterface
 from dbs.postgres.tenants.dbes import TenantDBE
-from dbs.postgres.tenants.interfaces import TenantDAOInterface
 
 
 class TenantService:

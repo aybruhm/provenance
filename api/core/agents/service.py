@@ -1,8 +1,8 @@
 from uuid import UUID
 
 from core.agents.dtos import AgentDTO, CreateAgentDTO, UpdateAgentDTO
+from core.agents.interfaces import AgentDAOInterface
 from dbs.postgres.agents.dbes import AgentDBE
-from dbs.postgres.agents.interfaces import AgentDAOInterface
 
 
 class AgentService:
@@ -22,7 +22,7 @@ class AgentService:
         agent_dbe = await self.agent_dao.get_by_name(name=create_data.name)
         if agent_dbe:
             raise ValueError("Agent with this name already exists")
-        
+
         agent_dbe = await self.agent_dao.create(
             name=create_data.name,
             tenant_id=create_data.tenant_id,

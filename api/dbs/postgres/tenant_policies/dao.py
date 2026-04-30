@@ -3,9 +3,9 @@ from uuid import UUID
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import joinedload
 
+from core.policy.interfaces import TenantPolicyInterface
 from dbs.postgres.engine import get_db_session
 from dbs.postgres.tenant_policies.dbes import TenantPolicyDBE
-from dbs.postgres.tenant_policies.interfaces import TenantPolicyInterface
 
 
 class TenantPolicyDAO(TenantPolicyInterface):

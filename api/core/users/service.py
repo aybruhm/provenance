@@ -1,8 +1,8 @@
 from uuid import UUID
 
 from core.users.dtos import UserDTO, UserUpdateDTO
+from core.users.interfaces import UserDAOInterface
 from dbs.postgres.users.dbes import UserDBE
-from dbs.postgres.users.interfaces import UserDAOInterface
 
 
 class UserService:

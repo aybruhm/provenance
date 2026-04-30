@@ -6,8 +6,8 @@ from core.api_keys.dtos import (
     CreatedBy,
     UpdateAPIKeyScopeDTO,
 )
+from core.api_keys.interfaces import APIKeyDAOInterface, APIKeyDBE
 from core.api_keys.utils import generate_api_key
-from dbs.postgres.api_keys.interfaces import APIKeyDAOInterface, APIKeyDBE
 
 
 class APIKeyService:

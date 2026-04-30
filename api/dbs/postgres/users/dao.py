@@ -3,9 +3,9 @@ from uuid import UUID
 
 from sqlalchemy import select, update
 
+from core.users.interfaces import UserDAOInterface
 from dbs.postgres.engine import get_db_session
 from dbs.postgres.users.dbes import UserDBE
-from dbs.postgres.users.interfaces import UserDAOInterface
 
 
 class UserDAO(UserDAOInterface):

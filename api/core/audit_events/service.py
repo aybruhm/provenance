@@ -3,10 +3,10 @@ from uuid import UUID
 
 from core.audit_events import utils
 from core.audit_events.dtos import AuditEventDTO, CreateAuditEventDTO
+from core.audit_events.interfaces import AuditEventDAOInterface
 from core.audit_events.types import ChainValidationResult, ChainViolation
+from core.escalations.interfaces import EscalationDAOInterface
 from dbs.postgres.audit_events.dbes import AuditEventDBE
-from dbs.postgres.audit_events.interfaces import AuditEventDAOInterface
-from dbs.postgres.escalations.interfaces import EscalationDAOInterface
 
 
 class AuditEventService:

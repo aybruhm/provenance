@@ -3,9 +3,9 @@ from uuid import UUID
 
 from sqlalchemy import delete, select, update
 
+from core.policy.interfaces import PolicyDAOInterface
 from dbs.postgres.engine import get_db_session
 from dbs.postgres.policy.dbes import PolicyDBE
-from dbs.postgres.policy.interfaces import PolicyDAOInterface
 
 
 class PolicyDAO(PolicyDAOInterface):

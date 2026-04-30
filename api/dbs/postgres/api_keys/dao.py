@@ -4,8 +4,8 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.elements import ColumnElement
 
+from core.api_keys.interfaces import APIKeyDAOInterface
 from dbs.postgres.api_keys.dbes import APIKeyDBE
-from dbs.postgres.api_keys.interfaces import APIKeyDAOInterface
 from dbs.postgres.engine import get_db_session
 from dbs.postgres.users.dbes import UserDBE
 
