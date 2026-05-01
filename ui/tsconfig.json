@@ -10,11 +10,17 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"moduleResolution": "bundler"
-	}
-	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
-	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
-	//
-	// To make changes to top-level options such as include and exclude, we recommend extending
-	// the generated config; see https://svelte.dev/docs/kit/configuration#typescript
+		"moduleResolution": "bundler",
+		"paths": {
+			"$lib": ["./src/lib"],
+			"$lib/*": ["./src/lib/*"],
+			"$app/navigation": ["./node_modules/@sveltejs/kit/types/index.d.ts"],
+			"$app/stores": ["./node_modules/@sveltejs/kit/types/index.d.ts"],
+			"$app/environment": ["./node_modules/@sveltejs/kit/types/index.d.ts"],
+			"$app/forms": ["./node_modules/@sveltejs/kit/types/index.d.ts"],
+			"$app/paths": ["./node_modules/@sveltejs/kit/types/index.d.ts"],
+			"$app/state": ["./node_modules/@sveltejs/kit/types/index.d.ts"]
+		}
+	},
+	"include": ["vite-env.d.ts", "src/**/*.ts", "src/**/*.svelte"]
 }
