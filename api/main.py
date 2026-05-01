@@ -101,7 +101,6 @@ execution_gateway_router = ExecutionGatewayAPIRouter(
     tenant_service=tenant_service,
     audit_service=audit_service,
     escalation_manager=escalation_manager,
-    escalation_service=escalation_service,
 )
 audit_router = AuditAPIRouter(
     audit_service=audit_service,

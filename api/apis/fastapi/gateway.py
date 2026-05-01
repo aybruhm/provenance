@@ -4,14 +4,12 @@ from fastapi import APIRouter, Depends, Request
 
 from apis.fastapi.dtos import (
     Decision,
-    EscalationCreateRequestDTO,
     ExecuteRequestDTO,
     ExecuteResponseDTO,
 )
 from core.audit_events.service import AuditEventService
 from core.audit_events.service import utils as audit_utils
 from core.escalations.manager import EscalationManager
-from core.escalations.service import EscalationService
 from core.policy.engine import PolicyEngine
 from core.tenants.service import TenantService
 from services.dependencies import get_authenticated
@@ -25,13 +23,11 @@ class ExecutionGatewayAPIRouter:
         tenant_service: TenantService,
         audit_service: AuditEventService,
         escalation_manager: EscalationManager,
-        escalation_service: EscalationService,
     ):
         self.policy_engine = policy_engine
         self.tenant_service = tenant_service
         self.audit_service = audit_service
         self.escalation_manager = escalation_manager
-        self.escalation_service = escalation_service
 
         # Initialize api router
         self.router = APIRouter(
@@ -107,6 +103,10 @@ class ExecutionGatewayAPIRouter:
         actor_human_id: str | None = None
         final_decision = decision
 
+        logger.info(
+            f"  Evaluating policy for action={execute_request.action} decision={decision} reason={reason}"
+        )
+
         # ── BLOCK: immediate reject, no escalation ────────────────────────────────
         if decision == "BLOCK":
             execute_request.decision = "BLOCK"
@@ -122,16 +122,12 @@ class ExecutionGatewayAPIRouter:
         # ── ESCALATE: hold until human decision ───────────────────────────────────
         if decision == "ESCALATE":
             payload_hash = audit_utils.hash_payload(payload=parameters)
-            escalation_create_data = EscalationCreateRequestDTO(
-                tenant_id=UUID(tenant_id),
-                agent_id=UUID(execute_request.agent_id),
+            escalation_id = await self.escalation_manager.create_escalation(
+                tenant_id=tenant_id,
+                agent_id=execute_request.agent_id,
                 action=execute_request.action,
                 parameters_hash=payload_hash,
             )
-            escalation = await self.escalation_service.create_escalation(
-                create_data=escalation_create_data
-            )
-            escalation_id = str(escalation.id)
 
             logger.info(
                 f"\n  ESCALATION  id={escalation_id}\n"
