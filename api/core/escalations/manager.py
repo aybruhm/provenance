@@ -1,9 +1,8 @@
-from __future__ import annotations
-
 import asyncio
 from typing import OrderedDict
 from uuid import UUID
 
+from apis.fastapi.dtos.shared import EscalationStatus
 from core.escalations.dtos import CreateEscalationDTO, UpdateEscalationDTO
 from core.escalations.service import EscalationService
 
@@ -122,14 +121,18 @@ class EscalationManager:
 
         # Write to DB before setting the event so the execute handler
         # can immediately read the resolved state from the database.
-        await self.service.update_escalation(
+        escalation = await self.service.update_escalation(
             id=UUID(escalation_id),
             update_data=UpdateEscalationDTO(
-                status="TIMEOUT",
+                status=EscalationStatus.APPROVED
+                if decision == "APPROVE"
+                else EscalationStatus.REJECTED,
                 approver_id=approver_id,
                 reason=reason,
             ),
         )
+        if not escalation:
+            return False
 
         hold.event.set()
         return True

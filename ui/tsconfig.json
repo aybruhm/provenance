@@ -1,0 +1,26 @@
+{
+	"extends": "./.svelte-kit/tsconfig.json",
+	"compilerOptions": {
+		"rewriteRelativeImportExtensions": true,
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"moduleResolution": "bundler",
+		"paths": {
+			"$lib": ["./src/lib"],
+			"$lib/*": ["./src/lib/*"],
+			"$app/navigation": ["./node_modules/@sveltejs/kit/types/index.d.ts"],
+			"$app/stores": ["./node_modules/@sveltejs/kit/types/index.d.ts"],
+			"$app/environment": ["./node_modules/@sveltejs/kit/types/index.d.ts"],
+			"$app/forms": ["./node_modules/@sveltejs/kit/types/index.d.ts"],
+			"$app/paths": ["./node_modules/@sveltejs/kit/types/index.d.ts"],
+			"$app/state": ["./node_modules/@sveltejs/kit/types/index.d.ts"]
+		}
+	},
+	"include": ["vite-env.d.ts", "src/**/*.ts", "src/**/*.svelte"]
+}

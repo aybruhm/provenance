@@ -20,7 +20,7 @@ class PolicyService:
             name=dto.name,
             version=dto.version,
             description=dto.description,
-            rules={"rules": [rule.model_dump() for rule in dto.rules]},
+            rules=[rule.model_dump() for rule in dto.rules],
         )
 
     def _map_dbe_to_dto(
@@ -33,7 +33,7 @@ class PolicyService:
             name=dbe.name,  # type: ignore
             version=dbe.version,  # type: ignore
             description=dbe.description,  # type: ignore
-            rules=dbe.rules.get("rules", []),
+            rules=dbe.rules or [],  # type: ignore
             tenant_id=str(tenant_id),
             created_at=dbe.created_at.isoformat(),  # type: ignore
             updated_at=dbe.updated_at.isoformat(),  # type: ignore

@@ -1,4 +1,22 @@
 services:
+    ui:
+        image: provenance_ui:latest
+        build:
+            context: ../ui
+            dockerfile: docker/dev.Dockerfile
+        container_name: provenance_ui
+        ports:
+            - "${WEB_PORT:-5173}:5173"
+        volumes:
+            - ../ui:/app
+            - /app/node_modules
+        restart: unless-stopped
+        env_file: ../ui/.env
+        depends_on:
+            api:
+                condition: service_healthy
+        command: npm run dev
+
     api:
         image: provenance_api:latest
         build:

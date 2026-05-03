@@ -99,7 +99,6 @@ class EscalationService:
         offset: int,
         limit: int,
     ) -> list[EscalationDTO]:
-        filters = []
         escalations_dbes = await self.escalation_dao.query(
             columns=columns,
             filters=filters,
