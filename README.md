@@ -122,11 +122,14 @@ uv sync
 
 #### Configure environment
 
-Copy the template and fill in your values; the application will not start without them:
+Copy the templates and fill in your values; the application will not start without them:
 
 ```bash
 cp api/.env.template api/.env
+cp ui/.env.template ui/.env
 ```
+
+**API (`api/.env`)**
 
 | Variable        | Description                            |
 | --------------- | -------------------------------------- |
@@ -134,6 +137,13 @@ cp api/.env.template api/.env
 | `JWT_KEY`       | Secret key for signing JWT tokens      |
 | `JWT_EXP`       | Token expiry in seconds                |
 | `JWT_ALGORITHM` | Signing algorithm (default: `HS256`)   |
+
+**UI (`ui/.env`)**
+
+| Variable             | Description                                          |
+| -------------------- | ---------------------------------------------------- |
+| `PUBLIC_API_BASE_URL` | Base URL of the API server (default: `http://localhost:8000/api/v1/`) |
+| `NODE_ENV`           | Node environment (default: `development`)            |
 
 #### Run the application & apply schema migrations
 
@@ -275,4 +285,4 @@ The Python SDK (`provenance-client`) is available on PyPI and the TypeScript SDK
 - [x] SDK implementation
     - [x] Python - PYPI release
     - [x] Typescript - NPM release
-- [ ] UI
+- [x] UI
