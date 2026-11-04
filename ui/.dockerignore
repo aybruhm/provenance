@@ -1,0 +1,8 @@
+# Keep secrets and local state out of image builds.
+.env
+.env.*
+!.env.template
+node_modules/
+.svelte-kit/
+build/
+docker/
