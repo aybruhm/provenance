@@ -1,0 +1,99 @@
+name: Build and Release Docker Images
+
+on:
+    release:
+        types:
+            - published
+    # Manual run for a tag that already exists (e.g. a release published before this
+    # workflow existed, or a re-push after a failed build).
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: "Existing git tag to build (e.g. v0.1.0)"
+                required: true
+            latest:
+                description: "Also move the latest tag to this build"
+                type: boolean
+                default: false
+
+jobs:
+    build-and-push:
+        name: ${{ matrix.service }}
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+
+        env:
+            TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}
+            # Release: latest unless it's a pre-release. Manual: only when asked, so
+            # rebuilding an old tag doesn't roll latest back.
+            PUSH_LATEST: ${{ github.event_name == 'release' && !github.event.release.prerelease || github.event_name == 'workflow_dispatch' && inputs.latest }}
+
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - service: provenance-api
+                      context: api
+                      dockerfile: api/docker/prod.Dockerfile
+                    - service: provenance-ui
+                      context: ui
+                      dockerfile: ui/docker/prod.Dockerfile
+
+        steps:
+            - name: Validate tag format
+              run: |
+                  echo "$TAG" \
+                    | grep -qE '^v?[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$' \
+                    || (echo "Invalid tag '$TAG' — expected vMAJOR.MINOR.PATCH[-PRERELEASE]" && exit 1)
+
+            # Fails if the tag doesn't exist.
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  ref: refs/tags/${{ env.TAG }}
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            # Runtime stages use Docker Hardened Images (dhi.io).
+            - name: Log in to dhi.io
+              uses: docker/login-action@v3
+              with:
+                  registry: dhi.io
+                  username: ${{ secrets.DHI_USERNAME }}
+                  password: ${{ secrets.DHI_PATOKEN }}
+
+            - name: Log in to GHCR
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Extract image metadata
+              id: meta
+              uses: docker/metadata-action@v5
+              with:
+                  images: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}
+                  # value= so manual runs (ref is a branch) still tag from the chosen tag.
+                  # Pre-releases (e.g. v1.0.0-rc.1) only get the {{version}} tag.
+                  flavor: |
+                      latest=false
+                  tags: |
+                      type=semver,pattern={{version}},value=${{ env.TAG }}
+                      type=semver,pattern={{major}}.{{minor}},value=${{ env.TAG }}
+                      type=semver,pattern={{major}},value=${{ env.TAG }},enable=${{ !startsWith(env.TAG, 'v0.') && !startsWith(env.TAG, '0.') }}
+                      type=raw,value=latest,enable=${{ env.PUSH_LATEST }}
+
+            - name: Build and push
+              uses: docker/build-push-action@v6
+              with:
+                  context: ${{ matrix.context }}
+                  file: ${{ matrix.dockerfile }}
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+                  labels: ${{ steps.meta.outputs.labels }}
+                  cache-from: type=gha,scope=${{ matrix.service }}
+                  cache-to: type=gha,mode=max,scope=${{ matrix.service }}
