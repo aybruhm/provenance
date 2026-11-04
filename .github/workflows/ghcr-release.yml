@@ -4,6 +4,17 @@ on:
     release:
         types:
             - published
+    # Manual run for a tag that already exists (e.g. a release published before this
+    # workflow existed, or a re-push after a failed build).
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: "Existing git tag to build (e.g. v0.1.0)"
+                required: true
+            latest:
+                description: "Also move the latest tag to this build"
+                type: boolean
+                default: false
 
 jobs:
     build-and-push:
@@ -12,6 +23,12 @@ jobs:
         permissions:
             contents: read
             packages: write
+
+        env:
+            TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}
+            # Release: latest unless it's a pre-release. Manual: only when asked, so
+            # rebuilding an old tag doesn't roll latest back.
+            PUSH_LATEST: ${{ github.event_name == 'release' && !github.event.release.prerelease || github.event_name == 'workflow_dispatch' && inputs.latest }}
 
         strategy:
             fail-fast: false
@@ -25,8 +42,17 @@ jobs:
                       dockerfile: ui/docker/prod.Dockerfile
 
         steps:
+            - name: Validate tag format
+              run: |
+                  echo "$TAG" \
+                    | grep -qE '^v?[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$' \
+                    || (echo "Invalid tag '$TAG' — expected vMAJOR.MINOR.PATCH[-PRERELEASE]" && exit 1)
+
+            # Fails if the tag doesn't exist.
             - name: Checkout
               uses: actions/checkout@v4
+              with:
+                  ref: refs/tags/${{ env.TAG }}
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
@@ -51,14 +77,15 @@ jobs:
               uses: docker/metadata-action@v5
               with:
                   images: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}
-                  # latest only for stable releases, not pre-releases (e.g. v1.0.0-rc.1).
+                  # value= so manual runs (ref is a branch) still tag from the chosen tag.
+                  # Pre-releases (e.g. v1.0.0-rc.1) only get the {{version}} tag.
                   flavor: |
                       latest=false
                   tags: |
-                      type=semver,pattern={{version}}
-                      type=semver,pattern={{major}}.{{minor}}
-                      type=semver,pattern={{major}},enable=${{ !startsWith(github.event.release.tag_name, 'v0.') }}
-                      type=raw,value=latest,enable=${{ !github.event.release.prerelease }}
+                      type=semver,pattern={{version}},value=${{ env.TAG }}
+                      type=semver,pattern={{major}}.{{minor}},value=${{ env.TAG }}
+                      type=semver,pattern={{major}},value=${{ env.TAG }},enable=${{ !startsWith(env.TAG, 'v0.') && !startsWith(env.TAG, '0.') }}
+                      type=raw,value=latest,enable=${{ env.PUSH_LATEST }}
 
             - name: Build and push
               uses: docker/build-push-action@v6
