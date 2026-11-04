@@ -26,7 +26,7 @@ COPY --chown=65532:65532 --from=build /app/package*.json ./
 COPY --chown=65532:65532 --from=build /app/node_modules ./node_modules
 
 LABEL org.opencontainers.image.source=https://github.com/aybruhm/provenance
-LABEL org.opencontainers.image.description="Provenance UI — web console for the Provenance agentic audit & compliance layer, built with SvelteKit"
+LABEL org.opencontainers.image.description="Provenance UI — web console for governing AI agents: manage policies, review and approve escalations, explore audit trails, and export SOC 2, GDPR, and PCI-DSS compliance reports"
 LABEL org.opencontainers.image.licenses=GPL-2.0
 
 EXPOSE 3000

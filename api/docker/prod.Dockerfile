@@ -36,9 +36,11 @@ COPY --chown=78545:78545 --from=builder /install /opt/python/lib/python3.13/site
 COPY --chown=78545:78545 . .
 
 LABEL org.opencontainers.image.source=https://github.com/aybruhm/provenance
-LABEL org.opencontainers.image.description="Provenance API — agentic audit & compliance layer for AI agent deployments, built with FastAPI"
+LABEL org.opencontainers.image.description="Provenance API — compliance and governance gateway for AI agents: enforces policy before every action, escalates high-risk operations for human approval, and keeps a tamper-evident audit trail"
 LABEL org.opencontainers.image.licenses=GPL-2.0
 
 EXPOSE 8001
 
+# No --reload in production. Set FORWARDED_ALLOW_IPS to the reverse proxy's address
+# so X-Forwarded-* headers are trusted only from it (uvicorn defaults to 127.0.0.1).
 CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--proxy-headers"]
