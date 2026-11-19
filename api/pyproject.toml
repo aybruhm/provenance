@@ -1,6 +1,6 @@
 [project]
 name = "provenance"
-version = "0.1.0"
+version = "0.2.1"
 description = "Agentic Audit & Compliance Layer (SOC2 for AI agents)"
 readme = "README.md"
 requires-python = ">=3.13"
