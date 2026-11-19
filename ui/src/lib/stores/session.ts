@@ -1,4 +1,10 @@
 import { writable, get } from 'svelte/store';
+import type { Agent, Tenant } from '$lib/types/index';
+
+export interface Workspace {
+	tenant: Tenant;
+	agent: Agent;
+}
 
 export interface AppSession {
 	userId: string;
@@ -11,6 +17,7 @@ export interface AppSession {
 	policyId: string;
 	tenantPolicyId: string;
 	apiKey: string;
+	workspaces: Workspace[];
 }
 
 const STORAGE_KEY = 'provenance_session';
