@@ -17,23 +17,45 @@
 		const tenants = await listTenants();
 		if (tenants.length === 0) return;
 
-		const tenant = tenants[0];
-		session.update({ tenantId: tenant.id, tenantName: tenant.name });
+		const agents = await listAgents();
+		const workspaces = tenants.flatMap((tenant) =>
+			agents
+				.filter((agent) => agent.tenant_id === tenant.id)
+				.map((agent) => ({ tenant, agent }))
+		);
 
-		const [agents, policies] = await Promise.all([listAgents(), listPolicies(tenant.id)]);
-
-		const tenantAgents = agents.filter((a) => a.tenant_id === tenant.id);
-		if (tenantAgents.length > 0) {
-			session.update({ agentId: tenantAgents[0].id, agentName: tenantAgents[0].name });
+		session.update({ workspaces });
+		if (workspaces.length === 0) {
+			const tenant = tenants[0];
+			session.update({ tenantId: tenant.id, tenantName: tenant.name });
+			return;
 		}
 
+		const workspace =
+			workspaces.find(
+				(workspace) =>
+					workspace.agent.id === session.data.agentId &&
+					workspace.tenant.id === session.data.tenantId
+			) ?? workspaces[0];
+
+		await selectWorkspace(workspace.tenant.id, workspace.tenant.name, workspace.agent.id, workspace.agent.name);
+	}
+
+	async function selectWorkspace(
+		tenantId: string,
+		tenantName: string,
+		agentId: string,
+		agentName: string
+	) {
+		session.update({ tenantId, tenantName, agentId, agentName });
+		const policies = await listPolicies(tenantId);
 		if (policies.length > 0) {
 			const policy = policies[0];
 			const tenantPolicyId =
-				policy.tenant_policy_id ?? (await getTenantPolicyId(policy.id, tenant.id));
-			if (tenantPolicyId) {
-				session.update({ policyId: policy.id, tenantPolicyId });
-			}
+				policy.tenant_policy_id ?? (await getTenantPolicyId(policy.id, tenantId));
+			session.update({ policyId: policy.id, tenantPolicyId: tenantPolicyId ?? '' });
+		} else {
+			session.update({ policyId: '', tenantPolicyId: '' });
 		}
 	}
 
@@ -50,7 +72,8 @@
 			} catch {
 				// ignore — user will go through setup if needed
 			}
-			goto(session.isSetupComplete() ? '/dashboard' : '/setup');
+			const workspaceCount = session.data.workspaces?.length ?? 0;
+			goto(workspaceCount > 0 ? '/workspaces' : session.isSetupComplete() ? '/dashboard' : '/setup');
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Login failed';
 			toasts.add(error, 'err');

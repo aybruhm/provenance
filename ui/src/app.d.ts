@@ -10,4 +10,15 @@ declare global {
 	}
 }
 
-export {};
+declare module '$app/navigation' {
+	export function goto(
+		url: string,
+		options?: {
+			replaceState?: boolean;
+			noScroll?: boolean;
+			keepFocus?: boolean;
+			invalidateAll?: boolean;
+			state?: unknown;
+		}
+	): Promise<void>;
+}

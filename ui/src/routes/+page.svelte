@@ -8,6 +8,8 @@
 			goto('/login');
 		} else if (!session.isSetupComplete()) {
 			goto('/setup');
+		} else if ((session.data.workspaces?.length ?? 0) > 0) {
+			goto('/workspaces');
 		} else {
 			goto('/dashboard');
 		}

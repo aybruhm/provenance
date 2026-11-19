@@ -1,8 +1,14 @@
 run:
 	docker compose -f hosting/compose.yml --env-file api/.env up --build -d
 
+run-core:
+	docker compose -f hosting/compose.yml --env-file api/.env up --build -d --no-deps api ui
+
 stop:
 	docker compose -f hosting/compose.yml --env-file api/.env down
+
+stop-core:
+	docker compose -f hosting/compose.yml --env-file api/.env --profile core down
 
 db-reset:
 	@echo "WARNING: This will delete all data in the database!"

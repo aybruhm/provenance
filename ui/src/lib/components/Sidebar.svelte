@@ -4,11 +4,69 @@
 	import { fetchPendingEscalations, decide } from '$lib/controllers/escalations';
 	import { runIntegrity } from '$lib/controllers/integrity';
 	import type { Escalation, IntegrityResult } from '$lib/types/index';
+	import { listTenants } from '$lib/controllers/tenants';
+	import { listAgents } from '$lib/controllers/agents';
+	import { listPolicies, getTenantPolicyId } from '$lib/controllers/policies';
+	import type { Workspace } from '$lib/stores/session';
 	import EscalationCard from './EscalationCard.svelte';
 
 	let escalations = $state<Escalation[]>([]);
 	let integrity = $state<IntegrityResult | null>(null);
 	let scanningIntegrity = $state(false);
+	let workspaces = $state<Workspace[]>([]);
+	let switchingWorkspace = $state(false);
+
+	$effect(() => {
+		loadWorkspaces();
+	});
+
+	async function loadWorkspaces() {
+		try {
+			const [tenants, agents] = await Promise.all([listTenants(), listAgents()]);
+			workspaces = tenants.flatMap((tenant) =>
+				agents
+					.filter((agent) => agent.tenant_id === tenant.id)
+					.map((agent) => ({ tenant, agent }))
+			);
+		} catch {
+			workspaces = [];
+		}
+	}
+
+	async function switchWorkspace(event: Event) {
+		const value = (event.currentTarget as HTMLSelectElement).value;
+		const workspace = workspaces.find(
+			({ tenant, agent }) => `${tenant.id}:${agent.id}` === value
+		);
+		if (!workspace) return;
+
+		switchingWorkspace = true;
+		try {
+			const policies = await listPolicies(workspace.tenant.id);
+			let policyId = '';
+			let tenantPolicyId = '';
+			if (policies.length > 0) {
+				policyId = policies[0].id;
+				tenantPolicyId =
+					policies[0].tenant_policy_id ??
+					(await getTenantPolicyId(policyId, workspace.tenant.id)) ??
+					'';
+			}
+			session.update({
+				tenantId: workspace.tenant.id,
+				tenantName: workspace.tenant.name,
+				agentId: workspace.agent.id,
+				agentName: workspace.agent.name,
+				policyId,
+				tenantPolicyId,
+				workspaces
+			});
+		} catch (e) {
+			toasts.add(e instanceof Error ? e.message : 'Failed to switch workspace', 'err');
+		} finally {
+			switchingWorkspace = false;
+		}
+	}
 
 	export async function refresh() {
 		const { tenantId } = session.data;
@@ -97,7 +155,23 @@
 			</div>
 			<div>
 				<dt class="mb-0.5 text-[var(--muted)]">Agent</dt>
-				<dd class="font-medium text-[var(--text)]">{$session.agentName || '—'}</dd>
+				{#if workspaces.length > 1}
+					<select
+						value={`${$session.tenantId ?? ''}:${$session.agentId ?? ''}`}
+						onchange={switchWorkspace}
+						disabled={switchingWorkspace}
+						aria-label="Switch agent workspace"
+						class="w-full rounded border `border-(--border) bg-[var(--surface2)] px-2 py-1.5 text-xs font-medium text-[var(--text)]"
+					>
+						{#each workspaces as workspace (`${workspace.tenant.id}:${workspace.agent.id}`)}
+							<option value={`${workspace.tenant.id}:${workspace.agent.id}`}>
+								{workspace.agent.name}
+							</option>
+						{/each}
+					</select>
+				{:else}
+					<dd class="font-medium text-[var(--text)]">{$session.agentName || '—'}</dd>
+				{/if}
 				{#if $session.agentId}
 					<dd class="mt-0.5 font-mono text-[10px] break-all text-[var(--muted)]">
 						{$session.agentId}
