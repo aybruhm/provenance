@@ -1,5 +1,6 @@
 services:
     ui:
+        profiles: ["core"]
         image: provenance_ui:latest
         build:
             context: ../ui
@@ -15,9 +16,10 @@ services:
         depends_on:
             api:
                 condition: service_healthy
-        command: npm run dev
+        command: ["sh", "-c", "npm run prepare && exec npm run dev"]
 
     api:
+        profiles: ["core"]
         image: provenance_api:latest
         build:
             context: ../api
